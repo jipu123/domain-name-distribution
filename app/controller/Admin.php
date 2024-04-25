@@ -74,6 +74,32 @@ class Admin extends BaseController
         ]);
     }
 
+    public function api()
+    {
+        if (!$this->authenticate()) {
+            return json([
+                "code" => 0,
+                "msg" => "鉴权失败"
+            ]);
+        } //鉴权错误
+        switch(Request::param("tag")){
+            case "update_password":
+                $db = Db::table("user")->where("ukey", cookie("ukey"))->find();
+                if(Db::table("user")->where("id",$db["id"])->update(["password"=>md5(Request::param("password"))])){
+                    return json([
+                        "code"=>200,
+                        "msg"=>"修改成功"
+                    ]);
+                }else{
+                    return json([
+                        "code"=>0,
+                        "msg"=>"修改失败"
+                    ]);
+                }
+                break;
+        }
+    }
+
     public function login()
     {
         cookie("ukey", null);
@@ -86,8 +112,8 @@ class Admin extends BaseController
         if (!$sql) {
             return false;
         }
-        $sql1 = Db::table("auth")->where("auth",$sql["auth"])->find();
-        if (!$sql1||$sql1["name"]!="admin") {
+        $sql1 = Db::table("auth")->where("auth", $sql["auth"])->find();
+        if (!$sql1 || $sql1["name"] != "admin") {
             //鉴权不通过
             return false;
         }

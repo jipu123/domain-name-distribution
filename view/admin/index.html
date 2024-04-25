@@ -15,6 +15,8 @@
 <link rel="stylesheet" type="text/css" href="/css/animate.min.css">
 <link rel="stylesheet" type="text/css" href="/js/bootstrap-multitabs/multitabs.min.css">
 <link rel="stylesheet" type="text/css" href="/css/style.min.css">
+<!--对话插件css-->
+<link rel="stylesheet" type="text/css" href="/js/jquery-confirm/jquery-confirm.min.css">
 </head>
 
 <body class="lyear-index">
@@ -276,15 +278,7 @@
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
               <li>
-                <a class="multitabs dropdown-item" data-url="lyear_pages_profile.html"
-                  href="javascript:void(0)">
-                  <i class="mdi mdi-account"></i>
-                  <span>个人信息</span>
-                </a>
-              </li>
-              <li>
-                <a class="multitabs dropdown-item" data-url="lyear_pages_edit_pwd.html"
-                  href="javascript:void(0)">
+                <a class="dropdown-item" href="javascript:void(0)" id="xgmm">
                   <i class="mdi mdi-lock-outline"></i>
                   <span>修改密码</span>
                 </a>
@@ -297,7 +291,7 @@
               </li>
               <li class="dropdown-divider"></li>
               <li>
-                <a class="dropdown-item" href="lyear_pages_login_1.html">
+                <a class="dropdown-item" href="/admin/login.html">
                   <i class="mdi mdi-logout-variant"></i>
                   <span>退出登录</span>
                 </a>
@@ -329,8 +323,52 @@
 <script type="text/javascript" src="/js/bootstrap-multitabs/multitabs.min.js"></script>
 <script type="text/javascript" src="/js/jquery.cookie.min.js"></script>
 <script type="text/javascript" src="/js/index.min.js"></script>
+<!--对话插件js-->
+<script type="text/javascript" src="/js/jquery-confirm/jquery-confirm.min.js"></script>
 <script type="text/javascript">
-$(document).ready(function(e) {});
+$(document).ready(function(e) {
+  $('#xgmm').on('click', function() {
+    $.confirm({
+        title: '请输入新密码:',
+        //content: 'url:form.html',  // 也可以采用url形式
+        content: '<div class="form-group p-1 mb-0">' + 
+                 '  <input autofocus="" type="text" id="input-pass" placeholder="新密码" class="form-control">' +
+                 '</div>',
+        buttons: {
+            sayMyName: {
+                text: '我决定了',
+                btnClass: 'btn-orange',
+                action: function() {
+                    var input = this.$content.find('input#input-pass');
+                    if (!$.trim(input.val())) {
+                        $.alert({
+                            content: "密码 字段不能为空。",
+                            type: 'red'
+                        });
+                        return false;
+                    } else {
+                      //发送修改请求
+                      $.post('/admin/api', {password: input.val(),tag: "update_password"}, function(data) {
+                        if (data.code == 200) {
+                          $.alert({
+                            content: data.msg,
+                            type: 'green'
+                          });
+                        } else {
+                          $.alert({
+                            content: data.msg,
+                            type: 'red'
+                          });
+                        }
+                      })
+                    }
+                }
+            },
+            '算咧': function() {}
+        }
+    });
+});
+});
 </script>
 </body>
 </html>
