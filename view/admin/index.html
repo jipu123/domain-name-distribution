@@ -271,8 +271,8 @@
           <!--个人头像内容-->
           <li class="dropdown">
             <a href="javascript:void(0)" data-bs-toggle="dropdown" class="dropdown-toggle">
-              <img class="avatar-md rounded-circle" src="/favicon.ico" alt="" />
-              <span style="margin-left: 10px;">笔下光年</span>
+              <img class="avatar-md rounded-circle" src="/favicon.ico" alt="{$username}" />
+              <span style="margin-left: 10px;">{$username}</span>
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
               <li>
@@ -290,7 +290,7 @@
                 </a>
               </li>
               <li>
-                <a class="dropdown-item" href="javascript:void(0)">
+                <a class="dropdown-item" href="javascript:void(0)" onclick="sessionStorage.clear()">
                   <i class="mdi mdi-delete"></i>
                   <span>清空缓存</span>
                 </a>

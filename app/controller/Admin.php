@@ -76,6 +76,7 @@ class Admin extends BaseController
 
     public function login()
     {
+        cookie("ukey", null);
         return View::fetch();
     }
 
