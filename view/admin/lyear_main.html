@@ -26,7 +26,7 @@
 							<span class="avatar-md rounded-circle bg-white bg-opacity-25 avatar-box">
 								<i class="mdi mdi-dns fs-4"></i>
 							</span>
-							<span class="fs-4">102,125.00</span>
+							<span class="fs-4">{$records}</span>
 						</div>
 						<div class="text-end">解析数量</div>
 					</div>
@@ -40,7 +40,7 @@
 							<span class="avatar-md rounded-circle bg-white bg-opacity-25 avatar-box">
 								<i class="mdi mdi-domain fs-4"></i>
 							</span>
-							<span class="fs-4">920,000</span>
+							<span class="fs-4">{$domain}</span>
 						</div>
 						<div class="text-end">域名数量</div>
 					</div>
@@ -54,7 +54,7 @@
 							<span class="avatar-md rounded-circle bg-white bg-opacity-25 avatar-box">
 								<i class="mdi mdi-account fs-4"></i>
 							</span>
-							<span class="fs-4">34,005,000</span>
+							<span class="fs-4">{$user}</span>
 						</div>
 						<div class="text-end">用户数量</div>
 					</div>
@@ -68,9 +68,9 @@
 							<span class="avatar-md rounded-circle bg-white bg-opacity-25 avatar-box">
 								<i class="mdi mdi-comment-outline fs-4"></i>
 							</span>
-							<span class="fs-4">153 条</span>
+							<span class="fs-4">{$tickets} 条</span>
 						</div>
-						<div class="text-end">留言数量</div>
+						<div class="text-end">工单数量</div>
 					</div>
 				</div>
 			</div>
@@ -79,44 +79,28 @@
 
 		<div class="row">
 
-			<div class="col-lg-12">
-				<div class="card">
-					<header class="card-header">
-						<div class="card-title">留言</div>
-					</header>
-					<div class="card-body">
-						<div class="table-responsive">
-							<table class="table table-hover">
-								<thead>
-									<tr>
-										<th>时间</th>
-										<th>留言</th>
-										<th>邮箱</th>
-										<th>回复</th>
-										<th>操作</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td>今天</td>
-										<td>aaa.com</td>
-										<td>
-											<span class="badge bg-primary">检查</span>
-										</td>
-										<td>
-											<a class="">失效</a>
-										</td>
-										<td>
-											<a href="#">点此</a>
-										</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
+			<div class="col-md-6">
+			  <div class="card">
+				<div class="card-header">
+				  <div class="card-title">回复工单</div>
 				</div>
+				<div class="card-body">
+				  <canvas class="js-chartjs-bars"></canvas>
+				</div>
+			  </div>
 			</div>
-
+	  
+			<div class="col-md-6">
+			  <div class="card">
+				<div class="card-header">
+				<div class="card-title">日审核量</div>
+				</div>
+				<div class="card-body">
+				  <canvas class="js-chartjs-lines"></canvas>
+				</div>
+			  </div>
+			</div>
+	  
 		</div>
 
 	</div>
@@ -128,9 +112,61 @@
 	<!--引入chart插件js-->
 	<script type="text/javascript" src="/js/main.min.js"></script>
 	<script type="text/javascript">
-		$(document).ready(function (e) {
+		$(document).ready(function(e) {
+	var $dashChartBarsCnt = jQuery('.js-chartjs-bars')[0].getContext('2d'),
+		$dashChartLinesCnt = jQuery('.js-chartjs-lines')[0].getContext('2d');
 
-		});
+	var $dashChartBarsData = {
+		labels: (()=>{
+			let xq = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+			let rq = new Date().getDay();
+			let arr = [];
+			for (let i = 0; i < 7; i++) {
+				arr.push(xq[(rq + i) % 7]);
+			}
+			return arr;
+		})(),
+		datasets: [{
+			label: '工单量',
+			borderWidth: 1,
+			borderColor: 'rgba(0, 0, 0, 0)',
+			backgroundColor: 'rgba(0, 123, 255,0.5)',
+			hoverBackgroundColor: "rgba(0, 123, 255, 0.7)",
+			hoverBorderColor: "rgba(0, 0, 0, 0)",
+			data: {$tickets_count}
+		}]
+	};
+	var $dashChartLinesData = {
+		labels: (()=>{
+			let xq = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+			let rq = new Date().getDay();
+			let arr = [];
+			for (let i = 0; i < 7; i++) {
+				arr.push(xq[(rq + i) % 7]);
+			}
+			return arr;
+		})(),
+		datasets: [{
+			label: '审核量',
+			data: {$censor_count},
+			borderColor: '#007bff',
+			backgroundColor: 'rgba(0, 123, 255, 0.175)',
+			borderWidth: 1,
+			fill: false,
+			lineTension: 0.5
+		}]
+	};
+
+	new Chart($dashChartBarsCnt, {
+		type: 'bar',
+		data: $dashChartBarsData
+	});
+
+	var myLineChart = new Chart($dashChartLinesCnt, {
+		type: 'line',
+		data: $dashChartLinesData,
+	});
+});
 	</script>
 </body>
 

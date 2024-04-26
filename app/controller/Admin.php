@@ -42,6 +42,31 @@ class Admin extends BaseController
     public function lyear_main()
     {
         if (!$this->authenticate()) return redirect("/admin/login");
+        View::assign("records", Db::table("records")->select()->count());
+        View::assign("domain",DB::table("domain")->select()->count());
+        View::assign("user",DB::table("user")->select()->count());
+        View::assign("tickets",DB::table("tickets")->field('identity')->distinct(true)->count());
+        //获取回复的工单数量
+        $time = strtotime(date('Y-m-d',strtotime(date('Y-m-d',time()))-(86400*6)));//获取七天前的时间戳
+        $count = [];
+        for ($i=0; $i < 7; $i++) { 
+            array_push($count,Db::table("tickets")->whereDay('up_time',date('Y-m-d',$time))->count());
+            $time+=86400;
+        }
+        View::assign("tickets_count","[".implode(",",$count)."]");
+        //获取审核量
+        $time = strtotime(date('Y-m-d',strtotime(date('Y-m-d',time()))-(86400*6)));//获取七天前的时间戳
+        $count = [];
+        for ($i=0; $i < 7; $i++) { 
+            array_push($count,Db::table("censor")->whereDay('create_time',date('Y-m-d',$time))->count());
+            $time+=86400;
+        }
+        View::assign("censor_count","[".implode(",",$count)."]");
+        return View::fetch();
+    }
+
+    public function invite()
+    {
         return View::fetch();
     }
 
