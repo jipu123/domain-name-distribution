@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
-    <title>邀请管理 - 学习二级域名分发系统</title>
+    <title>用户管理 - 学习二级域名分发系统</title>
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-touch-fullscreen" content="yes">
@@ -32,7 +32,7 @@
             <div class="col-lg-12">
                 <div class="card">
                     <header class="card-header">
-                        <div class="card-title">邀请码列表</div>
+                        <div class="card-title">用户列表</div>
                     </header>
                     <div class="card-body">
                         <div id="toolbar" class="toolbar-btn-action">
@@ -53,17 +53,25 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h6 class="modal-title" id="exampleModalLiveLabel">新增</h6>
+                    <h6 class="modal-title" id="exampleModalLiveLabel">新增用户</h6>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="invite_input" class="form-label">邀请码</label>
-                        <input type="text" class="form-control" id="invite_input" placeholder="abc?" name="invite">
+                        <label for="usernick_input" class="form-label">用户昵称</label>
+                        <input type="text" class="form-control" id="usernick_input" placeholder="叫啥子" name="usernick">
                     </div>
                     <div class="mb-3">
-                        <label for="current" class="form-label">邀请人数: 0</label>
-                        <input type="range" class="form-range" min="0" max="100" id="current" name="current" value="0">
+                        <label for="username_input" class="form-label">用户名</label>
+                        <input type="text" class="form-control" id="username_input" placeholder="abc?" name="username">
+                    </div>
+                    <div class="mb-3">
+                        <label for="email_input" class="form-label">邮箱</label>
+                        <input type="email" class="form-control" id="email_input" placeholder="xx@xx.xx" name="email">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password_input" class="form-label">密码</label>
+                        <input type="password" class="form-control" id="password_input" placeholder="123321" name="password">
                     </div>
                     <div class="mb-3">
                         <label for="domain_input" class="form-label">非备案域名数: 0</label>
@@ -76,8 +84,10 @@
                             value="0">
                     </div>
                     <div class="mb-3">
-                        <label for="time_input" class="form-label">到期时间</label>
-                        <input type="text" class="form-control" id="time_input" data-provide="datepicker" data-date-highlight="true" placeholder="YYYY-mm-dd" name="time">
+                        <label for="auth_input" class="form-label">用户组</label>
+                        <select class="form-select" aria-label="用户权限组" id="auth_input" name="auth">
+                            <option selected value="null">请选择用户组</option>
+                          </select>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -109,9 +119,6 @@
     <script src="/js/bootstrap-table/locale/bootstrap-table-zh-CN.min.js"></script>
 
     <script>
-        $("input[name='current']").on('input', function () {
-            $("label[for='current']").text("邀请人数: " + $(this).val());
-        });
         $("input[name='domain']").on('input', function () {
             $("label[for='domain_input']").text("非备案域名数: " + $(this).val());
         });
@@ -119,48 +126,82 @@
             $("label[for='record_input']").text("备案域名数: " + $(this).val());
         });
         $("button[type='submit']").on('click', function () {
-            var invite = $("input[name='invite']").val().trim();
-            var current = $("input[name='current']").val();
-            var domain = $("input[name='domain']").val();
-            var record = $("input[name='record']").val();
-            var time = $("input[name='time']").val();
-            if (invite == "" || time == "") {
+            var usernick = $("#usernick_input").val().trim();
+            var username = $("#username_input").val().trim();
+            var password = $("#password_input").val().trim();
+            var email = $("#email_input").val().trim();
+            var domain = $("#domain_input").val();
+            var record = $("#record_input").val();
+            var auth = $("#auth_input").val();
+            if (usernick == "" || username == "" || password == ""  || auth == "null") {
                 return errify("请填写完整信息");
             }
-            var timePattern = /^\d{4}-\d{2}-\d{2}$/;
-            if (!timePattern.test(time)) {
-                return errify("请按照YYYY-mm-dd格式填写时间");
+            if (!validateEmail(email)) {
+                return errify("请输入有效的邮箱地址");
             }
+
+            function validateEmail(email) {
+                // Regular expression for email validation
+                var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailPattern.test(email);
+            }
+
             $.ajax({
                 url: "/admin/api",
                 type: "POST",
                 data: {
-                    tag:"invite",
-                    act:"add",
-                    invite: invite,
-                    current: current,
+                    tag: "user",
+                    act: "add",
+                    usernick: usernick,
+                    username: username,
+                    password: password,
+                    email: email,
                     domain: domain,
                     record: record,
-                    time: time
+                    auth: auth
                 },
                 success: function (data) {
                     if (data.code) {
-                        $('#add').modal('hide');
-                        $('#table').bootstrapTable('refresh');
-                        $("input[name='invite']").val("");
-                        $("input[name='current']").val(0);
-                        $("input[name='domain']").val(0);
-                        $("input[name='record']").val(0);
-                        $("input[name='time']").val("");
+                        $("#add").modal('hide');
+                        $("#table").bootstrapTable('refresh');
+                        $("usernick_input").val("");
+                        $("username_input").val("");
+                        $("password_input").val("");
+                        $("email_input").val("");
+                        $("domain_input").val(0);
+                        $("record_input").val(0);
+                        $("auth_input").val("");
                     } else {
-                        errify(data.msg);
+                        errify(data.msg)
                     }
+                },
+                error: function () {
+                    errify("网络错误");
+                }
+            });
+        });
+        (()=>{
+            $.ajax({
+                url: "/admin/api",
+                type: "POST",
+                data: {
+                    tag:"user",
+                    act:"auth"
+                },
+                success: function (data) {
+                        var auth = data;
+                        var html = "";
+                        for (var i = 0; i < auth.length; i++) {
+                            html += "<option value='" + auth[i].auth + "'>" + auth[i].name + "</option>";
+                        }
+                        $("#auth_input").append(html);
                 },
                 error:function(){
                     errify("网络错误");
                 }
             });
-        });
+        })()
+
         /**
          * 分页相关的配置
          **/
@@ -268,91 +309,68 @@
             align: 'center',
             // 是否作为排序列
             sortable: true,
-            visible: false,
+            // visible: false,
             // 当列名称与实际名称不一致时可用
-            sortName: 'sortId',
+            // sortName: 'sortId',
             switchable: false,
             // 列的宽度
             width: 8,
             // 宽度单位
             widthUnit: 'rem'
         }, {
-            field: 'value',
+            field: 'usernick',
             align: 'center',
-            title: '邀请码',
-            titleTooltip: '注册邀请码',
+            title: '昵称',
+            formatter: function (value, row, index) {
+                return value;
+            }
+        },{
+            field: 'username',
+            align: 'center',
+            title: '用户名',
+            titleTooltip: '注册用户名',
         }, {
-            field: 'record_num',
+            field: 'auth',
             align: 'center',
-            title: '备案域名数',
-            titleTooltip: '给予的备案域名数量',
+            title: '用户组',
+            titleTooltip: '用户权限组',
+        }, {
+            field: 'email',
+            align: 'center',
+            title: '邮箱',
+            titleTooltip: '用户邮箱',
         }, {
             field: 'domain_num',
             align: 'center',
             title: '非备案域名数',
             titleTooltip: '给予的非备案域名数量',
         }, {
-            field: 'current',
+            field: 'record_num',
             align: 'center',
-            title: '邀请人数',
-            formatter: function (value, row, index) {
-                var percentage = Math.floor(row.current / row.max * 100);
-                if (isNaN(percentage)) {
-                    percentage = 100;
-                }
-                var bg = "bg-success"
-                if (row.is_lock == 1) {
-                    bg = "bg-light"
-                } else if (new Date(row.over_time).getTime() < new Date().getTime()) {
-                    bg = "bg-light"
-                } else if (row.current >= row.max) {
-                    bg = "bg-danger"
-                }
-                value = '<div class="progress" style="max-width:100%" data-bs-toggle="tooltip" data-bs-placement="bottom" title="' + row.current + '/' + row.max + '">' +
-                    '<div class="progress-bar ' + bg + '" role="progressbar" style="width: ' + percentage + '%" aria-valuenow="' + percentage + '" aria-valuemin="0" aria-valuemax="100">' + percentage + '%</div>' +
-                    '</div>';
-                return value;
-            }
-        }, {
-            field: 'over_time',
-            align: 'center',
-            title: '到期时间',
-            formatter: function (value, row, index) {
-                let create = new Date(row.create_time).getTime();
-                let percentage = Math.floor((((new Date(row.over_time).getTime() < new Date().getTime()) ? new Date(row.over_time).getTime() : new Date().getTime()) - create) / (new Date(row.over_time).getTime() - create) * 100);
-                var bg = "bg-success"
-                if (row.is_lock == 1) {
-                    bg = "bg-light"
-                } else if (new Date(row.over_time).getTime() < new Date().getTime()) {
-                    bg = "bg-danger"
-                } else if (row.current >= row.max) {
-                    bg = "bg-light"
-                }
-                value = '<div class="progress" style="max-width:100%" data-bs-toggle="tooltip" data-bs-placement="bottom" title="' + row.over_time.split(" ")[0] + '">' +
-                    '<div class="progress-bar ' + bg + '" role="progressbar" style="width: ' + percentage + '%" aria-valuenow="' + percentage + '" aria-valuemin="0" aria-valuemax="100">' + percentage + '%</div>' +
-                    '</div>';
-                return value;
-            }
-        }, {
+            title: '备案域名数',
+            titleTooltip: '给予的备案域名数量',
+        },{
+            field:"update_time",
+            align:"center",
+            title:"登录时间",
+            titleTooltip:"最后一次登录时间",
+            sortable: true,
+        },{
             field: 'is_lock',
             title: '状态',
             formatter: function (value, row, index) {
                 var value = "";
                 if (row.is_lock == 1) {
-                    value = '<span class="badge bg-light" data-bs-toggle="tooltip" data-bs-placement="bottom" title="单击修改" onclick="xg(' + row.id + ',0)">禁用</span>';
-                } else if (new Date(row.over_time).getTime() < new Date().getTime()) {
-                    value = '<span class="badge bg-light">到期</span>';
-                } else if (row.current >= row.max) {
-                    value = '<span class="badge bg-light">满员</span>';
+                    value = '<span class="badge bg-light" data-bs-toggle="tooltip" data-bs-placement="bottom" title="单击修改" onclick="xg_lock(' + row.id + ',0)">禁用</span>';
                 } else {
-                    value = '<span class="badge bg-success" data-bs-toggle="tooltip" data-bs-placement="bottom" title="单击修改" onclick="xg(' + row.id + ',1)">正常</span>';
+                    value = '<span class="badge bg-success" data-bs-toggle="tooltip" data-bs-placement="bottom" title="单击修改" onclick="xg_lock(' + row.id + ',1)">正常</span>';
                 }
                 return value;
             }
         }];
 
         // 自定义操作按钮
-        function xg(id, tg) {
+        function xg_lock(id, tg) {
             var l = $('body').lyearloading({
                 opacity: 0.1,              // 遮罩层透明度，为0时不透明
                 backgroundColor: '#ccc',           // 遮罩层背景色
@@ -367,8 +385,8 @@
                 url: "/admin/api",
                 type: "POST",
                 data: {
-                    tag: "invite",
-                    act: "xg",
+                    tag: "user",
+                    act: "xg_lock",
                     id: id,
                     is_lock: tg
                 },
@@ -434,7 +452,7 @@
                     sort: params.sort,
                     // 排序方式 'asc' 'desc'
                     sortOrder: params.order,
-                    tag: "invite",
+                    tag: "user",
                     act: "list"
                 };
             },
