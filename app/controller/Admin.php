@@ -288,6 +288,152 @@ class Admin extends BaseController
                             "msg" => "修改失败"
                         ]);
                     }
+                }else if(Request::param("act") == "xg_nick"){
+                    if(empty(Request::param("usernick"))){
+                        return json([
+                            "code" => 0,
+                            "msg" => "昵称不能为空"
+                        ]);
+                    }
+                    $db = Db::table("user_auth")->where("id", Request::param("id"))->update(["usernick" => Request::param("usernick")]);
+                    if ($db) {
+                        return json([
+                            "code" => 200,
+                            "msg" => "修改成功"
+                        ]);
+                    } else {
+                        return json([
+                            "code" => 0,
+                            "msg" => "修改失败"
+                        ]);
+                    }
+                }else if(Request::param("act") == "xg_name"){
+                    if(empty(Request::param("username"))){
+                        return json([
+                            "code" => 0,
+                            "msg" => "用户名不能为空"
+                        ]);
+                    }
+                    $db = Db::table("user_auth")->where("id", Request::param("id"))->update(["username" => Request::param("username")]);
+                    if ($db) {
+                        return json([
+                            "code" => 200,
+                            "msg" => "修改成功"
+                        ]);
+                    } else {
+                        return json([
+                            "code" => 0,
+                            "msg" => "修改失败"
+                        ]);
+                    }
+                }else if(Request::param("act") == "xg_auth"){
+                    if(!Db::table("auth")->where("auth", Request::param("auth"))->find()){
+                        return json([
+                            "code" => 0,
+                            "msg" => "权限不存在"
+                        ]);
+                    }
+                    $db = Db::table("user")->where("id", Request::param("id"))->update(["auth" => Request::param("auth")]);
+                    if ($db) {
+                        return json([
+                            "code" => 200,
+                            "msg" => "修改成功"
+                        ]);
+                    } else {
+                        return json([
+                            "code" => 0,
+                            "msg" => "修改失败"
+                        ]);
+                    }
+                }else if(Request::param("act") == "xg_email"){
+                    if (!filter_var(Request::param("email"), FILTER_VALIDATE_EMAIL)) {
+                        return json([
+                            "code" => 0,
+                            "msg" => "邮箱格式不正确"
+                        ]);
+                    }
+                    $db = Db::table("user")->where("id", Request::param("id"))->update(["email" => Request::param("email")]);
+                    if ($db) {
+                        return json([
+                            "code" => 200,
+                            "msg" => "修改成功"
+                        ]);
+                    } else {
+                        return json([
+                            "code" => 0,
+                            "msg" => "修改失败"
+                        ]);
+                    }
+                }else if(Request::param("act") == "xg_domain"){
+                    
+                    if(!is_numeric(Request::param("domain_num"))){
+                        return json([
+                            "code" => 0,
+                            "msg" => "必须为数字"
+                        ]);
+                    }
+                    if(Request::param("domain_num") < 0){
+                        return json([
+                            "code" => 0,
+                            "msg" => "不能小于0"
+                        ]);
+                    }
+                    $db = Db::table("user")->where("id", Request::param("id"))->update(["domain_num" => Request::param("domain_num")]);
+                    if ($db) {
+                        return json([
+                            "code" => 200,
+                            "msg" => "修改成功"
+                        ]);
+                    } else {
+                        return json([
+                            "code" => 0,
+                            "msg" => "修改失败"
+                        ]);
+                    }
+                }else if(Request::param("act") == "xg_record"){
+                    if(!is_numeric(Request::param("record_num"))){
+                        return json([
+                            "code" => 0,
+                            "msg" => "必须为数字"
+                        ]);
+                    }
+                    if(Request::param("record_num") < 0){
+                        return json([
+                            "code" => 0,
+                            "msg" => "不能小于0"
+                        ]);
+                    }
+                    $db = Db::table("user")->where("id", Request::param("id"))->update(["record_num" => Request::param("record_num")]);
+                    if ($db) {
+                        return json([
+                            "code" => 200,
+                            "msg" => "修改成功"
+                        ]);
+                    } else {
+                        return json([
+                            "code" => 0,
+                            "msg" => "修改失败"
+                        ]);
+                    }
+                }else if(Request::param("act") == "xg_pass"){
+                    if(empty(Request::param("password"))){
+                        return json([
+                            "code" => 0,
+                            "msg" => "密码不能为空"
+                        ]);
+                    }
+                    $db = Db::table("user")->where("id", Request::param("id"))->update(["password" => md5(Request::param("password"))]);
+                    if ($db) {
+                        return json([
+                            "code" => 200,
+                            "msg" => "修改成功"
+                        ]);
+                    } else {
+                        return json([
+                            "code" => 0,
+                            "msg" => "修改失败"
+                        ]);
+                    }
                 }
                 break;
         }
@@ -311,6 +457,7 @@ class Admin extends BaseController
             //鉴权不通过
             return false;
         }
+        Db::table("user")->where("id",$sql["id"])->update(["update_time" => date("Y-m-d H:i:s",time())]);
         return true;
     }
 }

@@ -20,6 +20,8 @@
     <link rel="stylesheet" type="text/css" href="/js/bootstrap-datepicker/bootstrap-datepicker3.min.css">
     <!--时间日期选择器css-->
     <link rel="stylesheet" type="text/css" href="/js/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css">
+    <!--对话插件css-->
+    <link rel="stylesheet" type="text/css" href="/js/jquery-confirm/jquery-confirm.min.css">
     <link rel="stylesheet" type="text/css" href="/css/style.min.css">
 </head>
 
@@ -71,7 +73,8 @@
                     </div>
                     <div class="mb-3">
                         <label for="password_input" class="form-label">密码</label>
-                        <input type="password" class="form-control" id="password_input" placeholder="123321" name="password">
+                        <input type="password" class="form-control" id="password_input" placeholder="123321"
+                            name="password">
                     </div>
                     <div class="mb-3">
                         <label for="domain_input" class="form-label">非备案域名数: 0</label>
@@ -87,7 +90,7 @@
                         <label for="auth_input" class="form-label">用户组</label>
                         <select class="form-select" aria-label="用户权限组" id="auth_input" name="auth">
                             <option selected value="null">请选择用户组</option>
-                          </select>
+                        </select>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -117,6 +120,8 @@
     <!--表格插件js-->
     <script src="/js/bootstrap-table/bootstrap-table.js"></script>
     <script src="/js/bootstrap-table/locale/bootstrap-table-zh-CN.min.js"></script>
+    <!--对话插件-->
+    <script type="text/javascript" src="/js/jquery-confirm/jquery-confirm.min.js"></script>
 
     <script>
         $("input[name='domain']").on('input', function () {
@@ -133,7 +138,7 @@
             var domain = $("#domain_input").val();
             var record = $("#record_input").val();
             var auth = $("#auth_input").val();
-            if (usernick == "" || username == "" || password == ""  || auth == "null") {
+            if (usernick == "" || username == "" || password == "" || auth == "null") {
                 return errify("请填写完整信息");
             }
             if (!validateEmail(email)) {
@@ -180,28 +185,29 @@
                 }
             });
         });
-        (()=>{
+        var auth_arr;
+        (() => {
             $.ajax({
                 url: "/admin/api",
                 type: "POST",
                 data: {
-                    tag:"user",
-                    act:"auth"
+                    tag: "user",
+                    act: "auth"
                 },
                 success: function (data) {
-                        var auth = data;
-                        var html = "";
-                        for (var i = 0; i < auth.length; i++) {
-                            html += "<option value='" + auth[i].auth + "'>" + auth[i].name + "</option>";
-                        }
-                        $("#auth_input").append(html);
+                    var auth = data;
+                    var html = "";
+                    for (var i = 0; i < auth.length; i++) {
+                        html += "<option value='" + auth[i].auth + "'>" + auth[i].name + "</option>";
+                    }
+                    $("#auth_input").append(html);
+                    auth_arr = auth;
                 },
-                error:function(){
+                error: function () {
                     errify("网络错误");
                 }
             });
         })()
-
         /**
          * 分页相关的配置
          **/
@@ -316,46 +322,64 @@
             // 列的宽度
             width: 8,
             // 宽度单位
-            widthUnit: 'rem'
+            widthUnit: 'rem',
+            formatter: function (value, row, index) {
+                return "<text onclick='xg.password(" + row.id + ")' data-bs-toggle=\"tooltip\" data-bs-placement=\"bottom\" title=\"单击修改密码\">" + value + "</text>";
+            }
         }, {
             field: 'usernick',
             align: 'center',
             title: '昵称',
             formatter: function (value, row, index) {
-                return value;
+                return "<text onclick='xg.usernick(" + row.id + ")'>" + value + "</text>";
             }
-        },{
+        }, {
             field: 'username',
             align: 'center',
             title: '用户名',
             titleTooltip: '注册用户名',
+            formatter: function (value, row, index) {
+                return "<text onclick='xg.username(" + row.id + ")'>" + value + "</text>";
+            }
         }, {
             field: 'auth',
             align: 'center',
             title: '用户组',
             titleTooltip: '用户权限组',
+            formatter: function (value, row, index) {
+                return "<text onclick='xg.auth(" + row.id + ")'>" + value + "</text>";
+            }
         }, {
             field: 'email',
             align: 'center',
             title: '邮箱',
             titleTooltip: '用户邮箱',
+            formatter: function (value, row, index) {
+                return "<text onclick='xg.email(" + row.id + ")'>" + value + "</text>";
+            }
         }, {
             field: 'domain_num',
             align: 'center',
             title: '非备案域名数',
             titleTooltip: '给予的非备案域名数量',
+            formatter: function (value, row, index) {
+                return "<text onclick='xg.domain_num(" + row.id + "," + value + ")'>" + value + "</text>";
+            }
         }, {
             field: 'record_num',
             align: 'center',
             title: '备案域名数',
             titleTooltip: '给予的备案域名数量',
-        },{
-            field:"update_time",
-            align:"center",
-            title:"登录时间",
-            titleTooltip:"最后一次登录时间",
+            formatter: function (value, row, index) {
+                return "<text onclick='xg.record_num(" + row.id + "," + value + ")'>" + value + "</text>";
+            }
+        }, {
+            field: "update_time",
+            align: "center",
+            title: "登录时间",
+            titleTooltip: "最后一次登录时间",
             sortable: true,
-        },{
+        }, {
             field: 'is_lock',
             title: '状态',
             formatter: function (value, row, index) {
@@ -368,7 +392,313 @@
                 return value;
             }
         }];
-
+        //修改内容
+        let xg = {
+            password: (id) => {
+                $.confirm({
+                    title: '请输入新密码:',
+                    content: '<div class="form-group p-1 mb-0">' +
+                        '  <input autofocus="" type="text" id="input-pass" placeholder="新密码" class="form-control">' +
+                        '</div>',
+                    buttons: {
+                        sayMyName: {
+                            text: '确定',
+                            btnClass: 'btn-orange',
+                            action: function () {
+                                var input = this.$content.find('input#input-pass');
+                                if (!$.trim(input.val())) {
+                                    errify("表单不完整")
+                                    return false;
+                                } else {
+                                    //发送修改请求
+                                    $.post('/admin/api', { password: input.val(), tag: "user", act: "xg_pass", id: id }, function (data) {
+                                        if (data.code == 200) {
+                                            $.alert({
+                                                content: data.msg,
+                                                type: 'green'
+                                            });
+                                            $("#table").bootstrapTable('refresh');
+                                        } else {
+                                            errify(data.msg);
+                                            return false;
+                                        }
+                                    })
+                                }
+                            }
+                        },
+                        '取消': function () { }
+                    }
+                });
+            },
+            usernick: (id) => {
+                $.confirm({
+                    title: '请输入新昵称:',
+                    content: '<div class="form-group p-1 mb-0">' +
+                        '  <input autofocus="" type="text" id="input-nick" placeholder="新昵称" class="form-control">' +
+                        '</div>',
+                    buttons: {
+                        sayMyName: {
+                            text: '确定',
+                            btnClass: 'btn-orange',
+                            action: function () {
+                                var input = this.$content.find('input#input-nick');
+                                if (!$.trim(input.val())) {
+                                    errify("表单不完整")
+                                    return false;
+                                } else {
+                                    //发送修改请求
+                                    $.post('/admin/api', { usernick: input.val(), tag: "user", act: "xg_nick", id: id }, function (data) {
+                                        if (data.code == 200) {
+                                            $.alert({
+                                                content: data.msg,
+                                                type: 'green'
+                                            });
+                                            $("#table").bootstrapTable('refresh');
+                                        } else {
+                                            errify(data.msg);
+                                            return false;
+                                        }
+                                    })
+                                }
+                            }
+                        },
+                        '取消': function () { }
+                    }
+                });
+            },
+            username: (id) => {
+                $.confirm({
+                    title: '请输入新用户名:',
+                    content: '<div class="form-group p-1 mb-0">' +
+                        '  <input autofocus="" type="text" id="input-name" placeholder="新用户名" class="form-control">' +
+                        '</div>',
+                    buttons: {
+                        sayMyName: {
+                            text: '确定',
+                            btnClass: 'btn-orange',
+                            action: function () {
+                                var input = this.$content.find('input#input-name');
+                                if (!$.trim(input.val())) {
+                                    errify("表单不完整")
+                                    return false;
+                                } else {
+                                    //发送修改请求
+                                    $.post('/admin/api', { username: input.val(), tag: "user", act: "xg_name", id: id }, function (data) {
+                                        if (data.code == 200) {
+                                            $.alert({
+                                                content: data.msg,
+                                                type: 'green'
+                                            });
+                                            $("#table").bootstrapTable('refresh');
+                                        } else {
+                                            errify(data.msg);
+                                            return false;
+                                        }
+                                    })
+                                }
+                            }
+                        },
+                        '取消': function () { }
+                    }
+                });
+            },
+            auth: (id) => {
+                $.confirm({
+                    title: '请输入新用户组:',
+                    content: '<div class="form-group p-1 mb-0">' +
+                        '<select class="form-select" aria-label="新用户组" id="input-auth">' +
+                        (() => {
+                            var auth = auth_arr;
+                            var html = "";
+                            for (var i = 0; i < auth.length; i++) {
+                                html += "<option value='" + auth[i].auth + "'>" + auth[i].name + "</option>";
+                            }
+                            return html;
+                        })() +
+                        '</select> ' +
+                        '</div>',
+                    buttons: {
+                        sayMyName: {
+                            text: '确定',
+                            btnClass: 'btn-orange',
+                            action: function () {
+                                var input = this.$content.find('select#input-auth');
+                                if (input.val() == null) {
+                                    errify("表单不完整")
+                                    return false;
+                                } else {
+                                    //发送修改请求
+                                    $.post('/admin/api', { auth: input.val(), tag: "user", act: "xg_auth", id: id }, function (data) {
+                                        if (data.code == 200) {
+                                            $.alert({
+                                                content: data.msg,
+                                                type: 'green'
+                                            });
+                                            $("#table").bootstrapTable('refresh');
+                                        } else {
+                                            errify(data.msg);
+                                            return false;
+                                        }
+                                    })
+                                }
+                            }
+                        },
+                        '取消': function () { }
+                    }
+                });
+            },
+            email: (id) => {
+                $.confirm({
+                    title: '请输入新邮箱:',
+                    content: '<div class="form-group p-1 mb-0">' +
+                        '  <input autofocus="" type="email" id="input-email" placeholder="新邮箱" class="form-control">' +
+                        '</div>',
+                    buttons: {
+                        sayMyName: {
+                            text: '确定',
+                            btnClass: 'btn-orange',
+                            action: function () {
+                                var input = this.$content.find('input#input-email');
+                                var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                                if (!emailRegex.test(input.val())) {
+                                    errify("邮箱格式不正确");
+                                    return false;
+                                } else {
+                                    //发送修改请求
+                                    $.post('/admin/api', { email: input.val(), tag: "user", act: "xg_email", id: id }, function (data) {
+                                        if (data.code == 200) {
+                                            $.alert({
+                                                content: data.msg,
+                                                type: 'green'
+                                            });
+                                            $("#table").bootstrapTable('refresh');
+                                        } else {
+                                            errify(data.msg);
+                                            return false;
+                                        }
+                                    })
+                                }
+                            }
+                        },
+                        '取消': function () { }
+                    }
+                });
+            },
+            domain_num: (id, value) => {
+                $.confirm({
+                    title: '请输入非备案域名数量:',
+                    content: '<div class="input-group p-1 mb-0">' +
+                        '<button class="btn btn-outline-secondary" type="button" id="button-addon1" onclick=\'xg_input("input#input-domain","down")\'> - </button>' +
+                        '<input type="text" class="form-control" placeholder="" id="input-domain" aria-describedby="button-addon1" value="' + value + '" oninput="nums(this)">' +
+                        '<button class="btn btn-outline-secondary" type="button" id="button-addon1" onclick=\'xg_input("input#input-domain","add")\'> + </button>' +
+                        '</div>',
+                    buttons: {
+                        sayMyName: {
+                            text: '确定',
+                            btnClass: 'btn-orange',
+                            action: function () {
+                                var input = parseInt(this.$content.find('input#input-domain').val());
+                                if (isNaN(input)) {
+                                    errify("域名数量必须为数字");
+                                    return false;
+                                }
+                                if (input < 0) {
+                                    errify("域名数量不能小于0");
+                                    return false;
+                                } else {
+                                    //发送修改请求
+                                    $.post('/admin/api', { domain_num: input, tag: "user", act: "xg_domain", id: id }, function (data) {
+                                        if (data.code == 200) {
+                                            $.alert({
+                                                content: data.msg,
+                                                type: 'green'
+                                            });
+                                            $("#table").bootstrapTable('refresh');
+                                        } else {
+                                            errify(data.msg);
+                                            return false;
+                                        }
+                                    })
+                                }
+                            }
+                        },
+                        '取消': function () { }
+                    }
+                });
+            },
+            record_num: (id, value) => {
+                $.confirm({
+                    title: '请输入备案域名数量:',
+                    content: '<div class="input-group p-1 mb-0">' +
+                        '<button class="btn btn-outline-secondary" type="button" id="button-addon1" onclick=\'xg_input("input#input-record","down")\'> - </button>' +
+                        '<input type="text" class="form-control" placeholder="" id="input-record" aria-describedby="button-addon1" value="' + value + '" oninput="nums(this)">' +
+                        '<button class="btn btn-outline-secondary" type="button" id="button-addon1" onclick=\'xg_input("input#input-record","add")\'> + </button>' +
+                        '</div>',
+                    buttons: {
+                        sayMyName: {
+                            text: '确定',
+                            btnClass: 'btn-orange',
+                            action: function () {
+                                var input = parseInt(this.$content.find('input#input-record').val());
+                                if (isNaN(input)) {
+                                    errify("域名数量必须为数字");
+                                    return false;
+                                }
+                                if (input < 0) {
+                                    errify("域名数量不能小于0");
+                                    return false;
+                                } else {
+                                    //发送修改请求
+                                    $.post('/admin/api', { record_num: input, tag: "user", act: "xg_record", id: id }, function (data) {
+                                        if (data.code == 200) {
+                                            $.alert({
+                                                content: data.msg,
+                                                type: 'green'
+                                            });
+                                            $("#table").bootstrapTable('refresh');
+                                        } else {
+                                            errify(data.msg);
+                                            return false;
+                                        }
+                                    })
+                                }
+                            }
+                        },
+                        '取消': function () { }
+                    }
+                });
+            },
+        }
+        function nums(obj) {
+            var num = $(obj).val();
+            if (isNaN(num) || num < 0) {
+                return $(obj).val(0);
+            }
+            $(obj).val($.trim(num));
+        }
+        function xg_input(id, tag) {
+            var num = $(id).val();
+            if (tag == "add") {
+                var num = parseInt(num);
+                if (!isNaN(num)) {
+                    num += 1;
+                } else {
+                    num = 1;
+                }
+                $(id).val(num);
+            } else {
+                var num = parseInt(num);
+                if (!isNaN(num)) {
+                    num -= 1;
+                } else {
+                    num = 0;
+                }
+                if (num < 0) {
+                    num = 0
+                }
+                $(id).val(num);
+            }
+        }
         // 自定义操作按钮
         function xg_lock(id, tg) {
             var l = $('body').lyearloading({
