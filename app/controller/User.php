@@ -10,7 +10,7 @@ class User extends BaseController
 {
     public function index()
     {
-        if (!$this->authenticate()) return redirect("/admin/login");
+        if (!$this->authenticate()) return redirect("/user/login");
         $sql = Db::table("user")->where("ukey", cookie("ukey"))->find();
         View::assign($sql);
         return View::fetch();
@@ -19,6 +19,46 @@ class User extends BaseController
     public function lyear_main()
     {
         return View::fetch();
+    }
+
+    public function api()
+    {
+        if (!$this->authenticate()) {
+            return json([
+                "code" => 0,
+                "msg" => "鉴权失败"
+            ]);
+        } //鉴权错误
+        switch(Request::param("tag")){
+            case "update_password":
+                $db = Db::table("user")->where("ukey", cookie("ukey"))->find();
+                if (Db::table("user")->where("id", $db["id"])->update(["password" => md5(Request::param("password"))])) {
+                    return json([
+                        "code" => 200,
+                        "msg" => "修改成功"
+                    ]);
+                } else {
+                    return json([
+                        "code" => 0,
+                        "msg" => "修改失败"
+                    ]);
+                }
+                break;
+            case "update_email":
+                $db = Db::table("user")->where("ukey", cookie("ukey"))->find();
+                if (Db::table("user")->where("id", $db["id"])->update(["email" => Request::param("email")])) {
+                    return json([
+                        "code" => 200,
+                        "msg" => "修改成功"
+                    ]);
+                } else {
+                    return json([
+                        "code" => 0,
+                        "msg" => "修改失败"
+                    ]);
+                }
+                break;
+        }
     }
 
     public function enroll_api()

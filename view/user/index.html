@@ -261,7 +261,7 @@
               </a>
               <ul class="dropdown-menu dropdown-menu-end">
                 <li>
-                  <a class="dropdown-item" href="javascript:void(0)" id="xgmm">
+                  <a class="dropdown-item" href="javascript:void(0)" id="xgyx">
                     <i class="mdi mdi-email"></i>
                     <span>修改邮箱</span>
                   </a>
@@ -319,7 +319,6 @@
       $('#xgmm').on('click', function () {
         $.confirm({
           title: '请输入新密码:',
-          //content: 'url:form.html',  // 也可以采用url形式
           content: '<div class="form-group p-1 mb-0">' +
             '  <input autofocus="" type="text" id="input-pass" placeholder="新密码" class="form-control">' +
             '</div>',
@@ -337,7 +336,53 @@
                   return false;
                 } else {
                   //发送修改请求
-                  $.post('/admin/api', { password: input.val(), tag: "update_password" }, function (data) {
+                  $.post('/user/api', { password: input.val(), tag: "update_password" }, function (data) {
+                    if (data.code == 200) {
+                      $.alert({
+                        content: data.msg,
+                        type: 'green'
+                      });
+                    } else {
+                      $.alert({
+                        content: data.msg,
+                        type: 'red'
+                      });
+                    }
+                  })
+                }
+              }
+            },
+            '算咧': function () { }
+          }
+        });
+      });
+      $('#xgyx').on('click', function () {
+        $.confirm({
+          title: '请输入新邮箱:',
+          content: '<div class="form-group p-1 mb-0">' +
+            '  <input autofocus="" type="email" id="input-email" placeholder="新邮箱" class="form-control">' +
+            '</div>',
+          buttons: {
+            sayMyName: {
+              text: '我决定了',
+              btnClass: 'btn-orange',
+              action: function () {
+                var input = this.$content.find('input#input-email');
+                if (!$.trim(input.val())) {
+                  $.alert({
+                    content: "邮箱 字段不能为空。",
+                    type: 'red'
+                  });
+                  return false;
+                } else if (!/^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/.test($.trim(input.val()))) {
+                  $.alert({
+                    content: "邮箱格式不正确。",
+                    type: 'red'
+                  });
+                  return false;
+                } else {
+                  //发送修改请求
+                  $.post('/user/api', { email: input.val(), tag: "update_email" }, function (data) {
                     if (data.code == 200) {
                       $.alert({
                         content: data.msg,
