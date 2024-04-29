@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+  <meta name="author" content="yinq">
+  <title>用户 - 学习二级域名分发系统</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-touch-fullscreen" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="stylesheet" type="text/css" href="/css/materialdesignicons.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/animate.min.css">
+  <link rel="stylesheet" type="text/css" href="/js/bootstrap-multitabs/multitabs.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/style.min.css">
+  <!--对话插件css-->
+  <link rel="stylesheet" type="text/css" href="/js/jquery-confirm/jquery-confirm.min.css">
+</head>
+
+<body class="lyear-index">
+  <div class="lyear-layout-web">
+    <div class="lyear-layout-container">
+      <!--左侧导航-->
+      <aside class="lyear-layout-sidebar">
+
+        <!-- logo -->
+        <div id="logo" class="sidebar-header">
+          <a href="#" style="font-size: 150%;">后台首页</a>
+        </div>
+        <div class="lyear-layout-sidebar-info lyear-scroll">
+
+          <nav class="sidebar-main">
+
+            <ul class="nav-drawer">
+              <li class="nav-item active">
+                <a class="multitabs" href="/user/lyear_main.html" id="default-page">
+                  <i class="mdi mdi-home-city-outline"></i>
+                  <span>首页</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="javascript:void(0)">
+                  <i class="mdi mdi-domain"></i>
+                  <span>解析管理</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="javascript:void(0)">
+                  <i class="mdi mdi-account-alert"></i>
+                  <span>工单列表</span>
+                </a>
+              </li>
+            </ul>
+          </nav>
+
+          <div class="sidebar-footer">
+            <p class="copyright">
+              <span>All rights reserved. This website is built with </span>
+              <a href="https://www.kancloud.cn/manual/thinkphp6_0/" target="_blank">thinkphp6</a>
+              <span> in the backend and the front-end template </span>
+              <a href="http://www.bixiaguangnian.com" target="_blank">笔下光年</a>
+              <span>. The content is written by</span>
+              <a href="https://gitee.com/ji_pu/domain-name-distribution" target="_blank">基蒲</a>
+              <span>. Licensed under the MIT License. Copyright &copy; 2024</span>
+
+            </p>
+          </div>
+        </div>
+
+      </aside>
+      <!--End 左侧导航-->
+
+      <!--头部信息-->
+      <header class="lyear-layout-header">
+
+        <nav class="navbar">
+
+          <div class="navbar-left">
+            <div class="lyear-aside-toggler">
+              <span class="lyear-toggler-bar"></span>
+              <span class="lyear-toggler-bar"></span>
+              <span class="lyear-toggler-bar"></span>
+            </div>
+          </div>
+
+          <ul class="navbar-right d-flex align-items-center">
+            <!--切换主题配色-->
+            <li class="dropdown dropdown-skin">
+              <span data-bs-toggle="dropdown" class="icon-item">
+                <i class="mdi mdi-palette fs-5"></i>
+              </span>
+              <ul class="dropdown-menu dropdown-menu-end" data-stopPropagation="true">
+                <li class="lyear-skin-title">
+                  <p>主题</p>
+                </li>
+                <li class="lyear-skin-li clearfix">
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="site_theme" id="site_theme_1" value="default"
+                      checked="checked">
+                    <label class="form-check-label" for="site_theme_1"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="site_theme" id="site_theme_2"
+                      value="translucent-green">
+                    <label class="form-check-label" for="site_theme_2"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="site_theme" id="site_theme_3"
+                      value="translucent-blue">
+                    <label class="form-check-label" for="site_theme_3"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="site_theme" id="site_theme_4"
+                      value="translucent-yellow">
+                    <label class="form-check-label" for="site_theme_4"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="site_theme" id="site_theme_5"
+                      value="translucent-red">
+                    <label class="form-check-label" for="site_theme_5"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="site_theme" id="site_theme_6"
+                      value="translucent-pink">
+                    <label class="form-check-label" for="site_theme_6"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="site_theme" id="site_theme_7"
+                      value="translucent-cyan">
+                    <label class="form-check-label" for="site_theme_7"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="site_theme" id="site_theme_8" value="dark">
+                    <label class="form-check-label" for="site_theme_8"></label>
+                  </div>
+                </li>
+                <li class="lyear-skin-title">
+                  <p>LOGO</p>
+                </li>
+                <li class="lyear-skin-li clearfix">
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="logo_bg" id="logo_bg_1" value="default"
+                      checked="checked">
+                    <label class="form-check-label" for="logo_bg_1"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="logo_bg" id="logo_bg_2" value="color_2">
+                    <label class="form-check-label" for="logo_bg_2"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="logo_bg" id="logo_bg_3" value="color_3">
+                    <label class="form-check-label" for="logo_bg_3"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="logo_bg" id="logo_bg_4" value="color_4">
+                    <label class="form-check-label" for="logo_bg_4"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="logo_bg" id="logo_bg_5" value="color_5">
+                    <label class="form-check-label" for="logo_bg_5"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="logo_bg" id="logo_bg_6" value="color_6">
+                    <label class="form-check-label" for="logo_bg_6"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="logo_bg" id="logo_bg_7" value="color_7">
+                    <label class="form-check-label" for="logo_bg_7"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="logo_bg" id="logo_bg_8" value="color_8">
+                    <label class="form-check-label" for="logo_bg_8"></label>
+                  </div>
+                </li>
+                <li class="lyear-skin-title">
+                  <p>头部</p>
+                </li>
+                <li class="lyear-skin-li clearfix">
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="header_bg" id="header_bg_1" value="default"
+                      checked="checked">
+                    <label class="form-check-label" for="header_bg_1"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="header_bg" id="header_bg_2" value="color_2">
+                    <label class="form-check-label" for="header_bg_2"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="header_bg" id="header_bg_3" value="color_3">
+                    <label class="form-check-label" for="header_bg_3"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="header_bg" id="header_bg_4" value="color_4">
+                    <label class="form-check-label" for="header_bg_4"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="header_bg" id="header_bg_5" value="color_5">
+                    <label class="form-check-label" for="header_bg_5"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="header_bg" id="header_bg_6" value="color_6">
+                    <label class="form-check-label" for="header_bg_6"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="header_bg" id="header_bg_7" value="color_7">
+                    <label class="form-check-label" for="header_bg_7"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="header_bg" id="header_bg_8" value="color_8">
+                    <label class="form-check-label" for="header_bg_8"></label>
+                  </div>
+                </li>
+                <li class="lyear-skin-title">
+                  <p>侧边栏</p>
+                </li>
+                <li class="lyear-skin-li clearfix">
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="sidebar_bg" id="sidebar_bg_1" value="default"
+                      checked="checked">
+                    <label class="form-check-label" for="sidebar_bg_1"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="sidebar_bg" id="sidebar_bg_2" value="color_2">
+                    <label class="form-check-label" for="sidebar_bg_2"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="sidebar_bg" id="sidebar_bg_3" value="color_3">
+                    <label class="form-check-label" for="sidebar_bg_3"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="sidebar_bg" id="sidebar_bg_4" value="color_4">
+                    <label class="form-check-label" for="sidebar_bg_4"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="sidebar_bg" id="sidebar_bg_5" value="color_5">
+                    <label class="form-check-label" for="sidebar_bg_5"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="sidebar_bg" id="sidebar_bg_6" value="color_6">
+                    <label class="form-check-label" for="sidebar_bg_6"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="sidebar_bg" id="sidebar_bg_7" value="color_7">
+                    <label class="form-check-label" for="sidebar_bg_7"></label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="sidebar_bg" id="sidebar_bg_8" value="color_8">
+                    <label class="form-check-label" for="sidebar_bg_8"></label>
+                  </div>
+                </li>
+              </ul>
+            </li>
+            <!--End 切换主题配色-->
+            <!--个人头像内容-->
+            <li class="dropdown">
+              <a href="javascript:void(0)" data-bs-toggle="dropdown" class="dropdown-toggle">
+                <span style="margin-left: 10px;">{$usernick}</span>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                  <a class="dropdown-item" href="javascript:void(0)" id="xgmm">
+                    <i class="mdi mdi-email"></i>
+                    <span>修改邮箱</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="javascript:void(0)" id="xgmm">
+                    <i class="mdi mdi-lock-outline"></i>
+                    <span>修改密码</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="javascript:void(0)" onclick="sessionStorage.clear()">
+                    <i class="mdi mdi-delete"></i>
+                    <span>清空缓存</span>
+                  </a>
+                </li>
+                <li class="dropdown-divider"></li>
+                <li>
+                  <a class="dropdown-item" href="/user/login.html">
+                    <i class="mdi mdi-logout-variant"></i>
+                    <span>退出登录</span>
+                  </a>
+                </li>
+              </ul>
+            </li>
+            <!--End 个人头像内容-->
+          </ul>
+
+        </nav>
+
+      </header>
+      <!--End 头部信息-->
+
+      <!--页面主要内容-->
+      <main class="lyear-layout-content">
+
+        <div id="iframe-content"></div>
+
+      </main>
+      <!--End 页面主要内容-->
+    </div>
+  </div>
+
+  <script type="text/javascript" src="/js/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/popper.min.js"></script>
+  <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="/js/perfect-scrollbar.min.js"></script>
+  <script type="text/javascript" src="/js/bootstrap-multitabs/multitabs.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.cookie.min.js"></script>
+  <script type="text/javascript" src="/js/index.min.js"></script>
+  <!--对话插件js-->
+  <script type="text/javascript" src="/js/jquery-confirm/jquery-confirm.min.js"></script>
+  <script type="text/javascript">
+    $(document).ready(function (e) {
+      $('#xgmm').on('click', function () {
+        $.confirm({
+          title: '请输入新密码:',
+          //content: 'url:form.html',  // 也可以采用url形式
+          content: '<div class="form-group p-1 mb-0">' +
+            '  <input autofocus="" type="text" id="input-pass" placeholder="新密码" class="form-control">' +
+            '</div>',
+          buttons: {
+            sayMyName: {
+              text: '我决定了',
+              btnClass: 'btn-orange',
+              action: function () {
+                var input = this.$content.find('input#input-pass');
+                if (!$.trim(input.val())) {
+                  $.alert({
+                    content: "密码 字段不能为空。",
+                    type: 'red'
+                  });
+                  return false;
+                } else {
+                  //发送修改请求
+                  $.post('/admin/api', { password: input.val(), tag: "update_password" }, function (data) {
+                    if (data.code == 200) {
+                      $.alert({
+                        content: data.msg,
+                        type: 'green'
+                      });
+                    } else {
+                      $.alert({
+                        content: data.msg,
+                        type: 'red'
+                      });
+                    }
+                  })
+                }
+              }
+            },
+            '算咧': function () { }
+          }
+        });
+      });
+    });
+  </script>
+</body>
+
+</html>

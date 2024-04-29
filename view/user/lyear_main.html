@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-touch-fullscreen" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="default">
+	<link rel="stylesheet" type="text/css" href="/css/materialdesignicons.min.css">
+	<link rel="stylesheet" type="text/css" href="/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="/css/style.min.css">
+</head>
+
+<body>
+	<div class="container-fluid">
+
+		<div class="row">
+
+			<div class="col-md-6 col-xl-3">
+				<div class="card bg-primary text-white">
+					<div class="card-body">
+						<div class="d-flex justify-content-between">
+							<span class="avatar-md rounded-circle bg-white bg-opacity-25 avatar-box">
+								<i class="mdi mdi-dns fs-4"></i>
+							</span>
+							<span class="fs-4">{$records}</span>
+						</div>
+						<div class="text-end">解析数量</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-md-6 col-xl-3">
+				<div class="card bg-danger text-white">
+					<div class="card-body">
+						<div class="d-flex justify-content-between">
+							<span class="avatar-md rounded-circle bg-white bg-opacity-25 avatar-box">
+								<i class="mdi mdi-domain fs-4"></i>
+							</span>
+							<span class="fs-4">{$domain}</span>
+						</div>
+						<div class="text-end">域名数量</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-md-6 col-xl-3">
+				<div class="card bg-success text-white">
+					<div class="card-body">
+						<div class="d-flex justify-content-between">
+							<span class="avatar-md rounded-circle bg-white bg-opacity-25 avatar-box">
+								<i class="mdi mdi-account fs-4"></i>
+							</span>
+							<span class="fs-4">{$user}</span>
+						</div>
+						<div class="text-end">用户数量</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-md-6 col-xl-3">
+				<div class="card bg-purple text-white">
+					<div class="card-body">
+						<div class="d-flex justify-content-between">
+							<span class="avatar-md rounded-circle bg-white bg-opacity-25 avatar-box">
+								<i class="mdi mdi-comment-outline fs-4"></i>
+							</span>
+							<span class="fs-4">{$tickets} 条</span>
+						</div>
+						<div class="text-end">工单数量</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+		<div class="row">
+
+			<div class="col-md-6">
+			  <div class="card">
+				<div class="card-header">
+				  <div class="card-title">回复工单</div>
+				</div>
+				<div class="card-body">
+				  <canvas class="js-chartjs-bars"></canvas>
+				</div>
+			  </div>
+			</div>
+	  
+			<div class="col-md-6">
+			  <div class="card">
+				<div class="card-header">
+				<div class="card-title">日审核量</div>
+				</div>
+				<div class="card-body">
+				  <canvas class="js-chartjs-lines"></canvas>
+				</div>
+			  </div>
+			</div>
+	  
+		</div>
+
+	</div>
+
+	<script type="text/javascript" src="/js/jquery.min.js"></script>
+	<script type="text/javascript" src="/js/popper.min.js"></script>
+	<script type="text/javascript" src="/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/js/chart.min.js"></script>
+	<!--引入chart插件js-->
+	<script type="text/javascript" src="/js/main.min.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function(e) {
+	var $dashChartBarsCnt = jQuery('.js-chartjs-bars')[0].getContext('2d'),
+		$dashChartLinesCnt = jQuery('.js-chartjs-lines')[0].getContext('2d');
+
+	var $dashChartBarsData = {
+		labels: (()=>{
+			let xq = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+			let rq = new Date().getDay();
+			let arr = [];
+			for (let i = 0; i < 7; i++) {
+				arr.push(xq[(rq + i) % 7]);
+			}
+			return arr;
+		})(),
+		datasets: [{
+			label: '工单量',
+			borderWidth: 1,
+			borderColor: 'rgba(0, 0, 0, 0)',
+			backgroundColor: 'rgba(0, 123, 255,0.5)',
+			hoverBackgroundColor: "rgba(0, 123, 255, 0.7)",
+			hoverBorderColor: "rgba(0, 0, 0, 0)",
+			data: {$tickets_count}
+		}]
+	};
+	var $dashChartLinesData = {
+		labels: (()=>{
+			let xq = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+			let rq = new Date().getDay();
+			let arr = [];
+			for (let i = 0; i < 7; i++) {
+				arr.push(xq[(rq + i) % 7]);
+			}
+			return arr;
+		})(),
+		datasets: [{
+			label: '审核量',
+			data: {$censor_count},
+			borderColor: '#007bff',
+			backgroundColor: 'rgba(0, 123, 255, 0.175)',
+			borderWidth: 1,
+			fill: false,
+			lineTension: 0.5
+		}]
+	};
+
+	new Chart($dashChartBarsCnt, {
+		type: 'bar',
+		data: $dashChartBarsData
+	});
+
+	var myLineChart = new Chart($dashChartLinesCnt, {
+		type: 'line',
+		data: $dashChartLinesData,
+	});
+});
+	</script>
+</body>
+
+</html>
