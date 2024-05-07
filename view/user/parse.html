@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+    <title>解析管理 - 学习二级域名分发系统</title>
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="stylesheet" type="text/css" href="/css/materialdesignicons.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/bootstrap.min.css">
+    <!--消息提示css-->
+    <link rel="stylesheet" type="text/css" href="/css/animate.min.css">
+    <!--表格插件css-->
+    <link rel="stylesheet" href="/js/bootstrap-table/bootstrap-table.min.css">
+    <!--日期选择器css-->
+    <link rel="stylesheet" type="text/css" href="/js/bootstrap-datepicker/bootstrap-datepicker3.min.css">
+    <!--时间日期选择器css-->
+    <link rel="stylesheet" type="text/css" href="/js/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/style.min.css">
+</head>
+
+<body>
+
+    <div class="container-fluid">
+
+        <div class="row">
+
+            <div class="col-lg-12">
+                <div class="card">
+                    <header class="card-header">
+                        <div class="card-title">解析列表</div>
+                    </header>
+                    <div class="card-body">
+                        <div id="toolbar" class="toolbar-btn-action">
+                            <button id="btn_add" type="button" class="btn btn-primary me-1">
+                                <span class="mdi mdi-plus" aria-hidden="true"></span>新增解析
+                            </button>
+                        </div>
+                        <table id="table"></table>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+    <div class="modal fade" id="add" tabindex="-1" aria-labelledby="exampleModalLiveLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title" id="exampleModalLiveLabel">新增</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="sub" placeholder="子域名" aria-label="输入你想用的子域名">
+                        <select class="input-group-text" id="domain">
+                            {foreach $domains as $domain}
+                            <option value="{$domain.id}">{$domain.dom}</option>
+                            {/foreach}
+                        </select>
+                      </div>
+                      <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="val" placeholder="主机" aria-label="输入你想解析到的主机">
+                      </div>
+                      <div class="input-group mb-3">
+                        <select id="type" class="form-select form-select-lg mb-3">
+                            <option value="A">A</option>
+                            <option value="NS">NS</option>
+                            <option value="MX">MX</option>
+                            <option value="TXT">TXT</option>
+                            <option value="CNAME">CNAME</option>
+                            <option value="SRV">SRV</option>
+                            <option value="AAAA">AAAA</option>
+                            <option value="REDIRECT_URL">REDIRECT_URL</option>
+                            <option value="FORWARD_URL">FORWARD_URL</option>
+                        </select>
+                      </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    <button type="submit" class="btn btn-primary">保存修改</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/popper.min.js"></script>
+    <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+    <!--日期选择器js-->
+    <script type="text/javascript" src="/js/bootstrap-datepicker/bootstrap-datepicker.min.js"></script>
+    <script type="text/javascript" src="/js/bootstrap-datepicker/locales/bootstrap-datepicker.zh-CN.min.js"></script>
+
+    <!--时间日期选择器js-->
+    <script type="text/javascript" src="/js/momentjs/moment.min.js"></script>
+    <script type="text/javascript" src="/js/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js"></script>
+    <script type="text/javascript" src="/js/momentjs/locale/zh-cn.min.js"></script>
+    <script type="text/javascript" src="/js/main.min.js"></script>
+    <!--弹窗插件js-->
+    <script type="text/javascript" src="/js/bootstrap-notify.min.js"></script>
+    <!--加载插件js-->
+    <script type="text/javascript" src="/js/lyear-loading.js"></script>
+    <!--表格插件js-->
+    <script src="/js/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/js/bootstrap-table/locale/bootstrap-table-zh-CN.min.js"></script>
+
+    <script>                                                                                                                          
+        $("button[type='submit']").on('click', function () {
+            var sub = $("#sub").val();
+            var domain = $("#domain").val();
+            var val = $("#val").val();
+            var type = $("#type").val();
+            $.ajax({
+                url: "/user/parse_api",
+                type: "POST",
+                data: {
+                    act:"add",
+                    sub:sub,
+                    domain:domain,
+                    value:val,
+                    type:type
+                },
+                success: function (data) {
+                    if (!data.code) {
+                        $('#add').modal('hide');
+                        $('#table').bootstrapTable('refresh');
+                        $("#sub").val("");
+                        $("#domain").val("1");
+                        $("#val").val("");
+                        $("#type").val("A");
+                    } else {
+                        errify(data.msg);
+                    }
+                },
+                error:function(){
+                    errify("网络错误");
+                }
+            });
+        });
+        /**
+         * 分页相关的配置
+         **/
+        const pagination = {
+            // 分页方式：[client] 客户端分页，[server] 服务端分页
+            sidePagination: "server",
+            // 初始化加载第一页，默认第一页
+            pageNumber: 1,
+            // 每页的记录行数
+            pageSize: 10,
+            // 可供选择的每页的行数 - (亲测大于1000存在渲染问题)
+            pageList: [5, 10, 25, 50, 100],
+            // 在上百页的情况下体验较好 - 能够显示首尾页
+            paginationLoop: true,
+            // 展示首尾页的最小页数
+            paginationPagesBySide: 2
+        };
+
+        /**
+         * 按钮相关配置
+         **/
+        const button = {
+            // 按钮的类
+            buttonsClass: 'default',
+            // 类名前缀
+            buttonsPrefix: 'btn'
+        }
+
+        /**
+         * 图标相关配置
+         **/
+        const icon = {
+            // 图标前缀
+            iconsPrefix: 'mdi',
+            // 图标大小
+            iconSize: 'mini',
+            // 图标的设置
+            icons: {
+                columns: 'mdi-table-column-remove',
+                paginationSwitchDown: 'mdi-door-closed',
+                paginationSwitchUp: 'mdi-door-open',
+                refresh: 'mdi-refresh',
+                toggleOff: 'mdi-toggle-switch-off',
+                toggleOn: 'mdi-toggle-switch',
+                fullscreen: 'mdi-monitor-screenshot',
+                detailOpen: 'mdi-plus',
+                detailClose: 'mdi-minus'
+            }
+        };
+
+        /**
+         * 表格相关的配置
+         **/
+        const table = {
+            classes: 'table table-bordered table-hover table-striped lyear-table',
+            // 请求地址
+            url: '/user/parse_api',
+            // 唯一ID字段
+            uniqueId: 'id',
+            // 每行的唯一标识字段
+            idField: 'id',
+            // 是否启用点击选中行
+            clickToSelect: true,
+            // 是否显示详细视图和列表视图的切换按钮(clickToSelect同时设置为true时点击会报错)
+            // showToggle: true,
+            // 请求得到的数据类型
+            dataType: 'json',
+            // 请求方法
+            method: 'post',
+            // 工具按钮容器
+            toolbar: '#toolbar',
+            // 是否分页
+            pagination: true,
+            // 是否显示所有的列
+            showColumns: true,
+            // 是否显示刷新按钮
+            showRefresh: true,
+            // 显示图标
+            showButtonIcons: true,
+            // 显示文本
+            showButtonText: false,
+            // 显示全屏
+            showFullscreen: true,
+            // 开关控制分页
+            showPaginationSwitch: true,
+            // 总数字段
+            totalField: 'total',
+            // 当字段为 undefined 显示
+            undefinedText: '-',
+            // 排序方式
+            sortOrder: "desc",
+            ...icon,
+            ...pagination,
+            ...button
+        };
+
+        /**
+         * 用于演示的列信息
+         **/
+        const columns = [{
+            field: 'dns_id',
+            title: '编号',
+            // 使用[align]，[halign]和[valign]选项来设置列和它们的标题的对齐方式。
+            // h表示横向，v标识垂直
+            align: 'center',
+            // 是否作为排序列
+            sortable: true,
+            visible: false,
+            // 当列名称与实际名称不一致时可用
+            sortName: 'sortId',
+            switchable: false,
+            // 列的宽度
+            width: 8,
+            // 宽度单位
+            widthUnit: 'rem'
+        }, {
+            field: 'sub',
+            align: 'center',
+            title: '解析',
+            titleTooltip: '解析主机',
+        },{
+            field: 'type',
+            align: 'center',
+            title: '类型',
+            titleTooltip: '解析类型',
+        }, {
+            field: 'value',
+            align: 'center',
+            title: '值',
+            titleTooltip: '解析值',
+        },{
+            field: 'domain',
+            align: 'center',
+            title: '完整域名',
+            titleTooltip: '由自定域名拼接而成',
+            formatter: function (value, row, index) {
+                return row.sub + "." + row.dom;
+            }
+        }, {
+            field: 'is_record',
+            align: 'center',
+            title: '是否备案',
+            titleTooltip: '主域名是否备案',
+            formatter: function (value, row, index) {
+                if(value){
+                    return "已备案";
+                }
+                return "未备案";
+            }
+        }, {
+            field: 'create_time',
+            align: 'center',
+            title: '创建时间',
+            titleTooltip: '子域名创建时间',
+        }, {
+            field: 'is_delete',
+            align: 'center',
+            title: '是否删除',
+            formatter: function (value, row, index) {
+                var bg = "bg-success";
+                var value = "<text class='badge "+bg+"' onclick='del_dns("+row.dns_id+")'>运转</text>";
+                if (row.is_delect == 1) {
+                    value = "<text class='badge text-dark'><del>删除</del></text>";
+                }else if(row.is_delect == 2){
+                    bg = "bg-warning";
+                    value = "<text class='badge "+bg+"'>封禁</text>";
+                }
+                return value;
+            }
+        }];
+
+        // 操作方法 - 删除
+        function del_dns(id) {
+            $.ajax({
+                url: "/user/parse_api",
+                type: "post",
+                data: {
+                    id: id,
+                    act: "del"
+                },
+                success: function (data) {
+                    if (data.code == 200) {
+                        $.notify({
+                            icon: 'mdi mdi-check',
+                            message: data.msg
+                        }, {
+                            type: 'success',
+                            allow_dismiss: true,
+                            newest_on_top: false,
+                            placement: {
+                                from: 'top',
+                                align: 'right'
+                            },
+                            offset: {
+                                x: 20,
+                                y: 20
+                            },
+                            spacing: 10,
+                            z_index: 9999,
+                            delay: 5000,
+                            animate: {
+                                enter: 'animate__animated animate__fadeInDown',
+                                exit: 'animate__animated animate__fadeOutUp'
+                            },
+                            onClosed: null,
+                            mouse_over: null
+                        });
+                        $("#table").bootstrapTable('refresh');
+                    } else {
+                        errify(data.msg);
+                    }
+                },
+                error: function (data) {
+                    errify("删除失败");
+                }
+            });
+        }
+
+        // 操作方法 - 编辑
+        $("#btn_add").click(function () {
+            $("#add").modal("show");
+        });
+        // 错误的弹窗
+        function errify(msg) {
+            $.notify({
+                icon: 'mdi mdi-alert',
+                message: msg
+            }, {
+                type: 'danger',
+                allow_dismiss: true,
+                newest_on_top: false,
+                placement: {
+                    from: 'top',
+                    align: 'right'
+                },
+                offset: {
+                    x: 20,
+                    y: 20
+                },
+                spacing: 10,
+                z_index: 9999,
+                delay: 5000,
+                animate: {
+                    enter: 'animate__animated animate__fadeInDown',
+                    exit: 'animate__animated animate__fadeOutUp'
+                },
+                onClosed: null,
+                mouse_over: null
+            });
+        }
+
+        $('table').bootstrapTable({
+            ...table,
+            // 自定义的查询参数
+            queryParams: function (params) {
+                return {
+                    // 每页数据量
+                    limit: params.limit,
+                    // sql语句起始索引
+                    offset: params.offset,
+                    page: (params.offset / params.limit) + 1,
+                    // 排序的列名
+                    sort: params.sort,
+                    // 排序方式 'asc' 'desc'
+                    sortOrder: params.order
+                };
+            },
+            columns,
+            onLoadSuccess: function (data) {
+                $("[data-bs-toggle='tooltip']").tooltip();
+            }
+        });
+    </script>
+</body>
+
+</html>
