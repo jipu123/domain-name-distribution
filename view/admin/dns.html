@@ -247,42 +247,6 @@
             }
         }];
 
-        // 自定义操作按钮
-        function xg(id, tg) {
-            var l = $('body').lyearloading({
-                opacity: 0.1,              // 遮罩层透明度，为0时不透明
-                backgroundColor: '#ccc',           // 遮罩层背景色
-                imgUrl: '',               // 使用图片时的图片地址
-                textColorClass: 'text-success',   // 文本文字的颜色
-                spinnerColorClass: 'text-success',   // 加载动画的颜色(不使用图片时有效)
-                spinnerSize: 'lg',             // 加载动画的大小(不使用图片时有效，示例：sm/nm/md/lg，也可自定义大小，如：25px)
-                spinnerText: '修改中...',       // 文本文字    
-                zindex: 9999,             // 元素的堆叠顺序值
-            });
-            $.ajax({
-                url: "/admin/api",
-                type: "POST",
-                data: {
-                    tag: "invite",
-                    act: "xg",
-                    id: id,
-                    is_lock: tg
-                },
-                success: function (data) {
-                    l.hide();
-                    if (data.code) {
-                        $('table').bootstrapTable('refresh');
-                    } else {
-                        errify(data.msg)
-                    }
-                },
-                error: function (data) {
-                    l.hide();
-                    errify("网络错误")
-                }
-            });
-        }
-
         // 操作方法 - 编辑
         $("#btn_add").click(function () {
             $("#add").modal("show");
