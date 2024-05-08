@@ -28,6 +28,16 @@ use app\BaseController;
 use think\facade\Db;
 use think\facade\Request;
 use think\facade\View;
+use think\facade\Env;
+
+use AlibabaCloud\SDK\Alidns\V20150109\Alidns;
+use \Exception;
+use AlibabaCloud\Tea\Exception\TeaError;
+use AlibabaCloud\Tea\Utils\Utils;
+
+use Darabonba\OpenApi\Models\Config;
+use AlibabaCloud\SDK\Alidns\V20150109\Models\DeleteDomainRecordRequest;
+use AlibabaCloud\Tea\Utils\Utils\RuntimeOptions;
 
 class Admin extends BaseController
 {
@@ -92,6 +102,80 @@ class Admin extends BaseController
         return View::fetch();
     }
 
+    public function censor()
+    {
+        if (!$this->authenticate()) return redirect("/admin/login");
+        return View::fetch();
+    }
+
+    public function censor_api()
+    {
+        if (!$this->authenticate()) {
+            return json([
+                "code" => 0,
+                "msg" => "鉴权失败"
+            ]);
+        } //鉴权错误
+        switch (Request::param("tag")) {
+            case "list":
+                $db = Db::table("user_records")->where("is_delect", "0")->order(Request::param("sort"), Request::param("sortOrder"))->paginate([
+                    "list_rows" => Request::param("limit"),
+                    "page" => Request::param("page")
+                ])->each(function ($item, $key) {
+                    unset($item["ukey"]);
+                    return $item;
+                })->toArray();
+                return json([
+                    "total" => $db["total"],
+                    "rows" => $db["data"]
+                ]);
+                break;
+            case "ban":
+                $record = Db::table("records")->where("id", Request::param("dns_id"))->find();
+                $domain = Db::table("domain")->where("id", $record["dom_id"])->where("state", 0)->find();
+                $user = Db::table("user")->where("ukey", cookie("ukey"))->find();
+                $config = new Config([
+                    'accessKeyId' => Env::get("ALIYUN.ALIBABA_CLOUD_ACCESS_KEY_ID"),
+                    'accessKeySecret' => Env::get("ALIYUN.ALIBABA_CLOUD_ACCESS_KEY_SECRET")
+                ]);
+                $config->endpoint = "alidns.cn-hangzhou.aliyuncs.com";
+                $client = new Alidns($config);
+                $deleteDomainRecordRequest = new DeleteDomainRecordRequest([
+                    "recordId" => $record["RecordId"],
+                ]);
+                $runtime = new RuntimeOptions([]);
+                try {
+                    // 修改成功
+                    $res = $client->deleteDomainRecordWithOptions($deleteDomainRecordRequest, $runtime);
+                    if ($res->statusCode != 200) {
+                        return json(["code" => 300, "msg" => "上游服务器错误"]);
+                    }
+                    $res = $res->body;
+                } catch (Exception $error) {
+                    return json(["code" => 300, "msg" => $error->getMessage()]);
+                }
+                Db::table("censor")->insert([
+                    "user_id" => $user["id"],
+                    "domain_id" => Request::param("dns_id"),
+                    "outcome" => 1,
+                    "comment" => Request::param("comment"),
+                ]);
+                $record = Db::table("records")->where("id", Request::param("dns_id"))->update([
+                    "is_delect" => 2,
+                    "audit" => date("Y-m-d H:i:s", time())
+                ]); //更新数据库的datetime时间
+                break;
+            case "censor":
+                $user = Db::table("user")->where("ukey", cookie("ukey"))->find();
+                Db::table("censor")->insert([
+                    "user_id" => $user["id"],
+                    "domain_id" => Request::param("dns_id")
+                ]);
+                return json(["code" => 0, "msg" => "已提交审核"]);
+                break;
+        }
+    }
+
     public function dns_api()
     {
         if (!$this->authenticate()) {
@@ -102,17 +186,24 @@ class Admin extends BaseController
         } //鉴权错误
         switch (Request::param("tag")) {
             case "list":
-                $db = Db::table("user_records");
-                if (Request::param("search") != "") {
-                    $db->where("domain", "like", "%" . Request::param("search") . "%");
+
+                if (strlen(Request::param("query")) > 0) {
+                    $db = Db::table("user_records")->where("usernick", "like", "%" . Request::param("query") . "%")->order(Request::param("sort"), Request::param("sortOrder"))->paginate([
+                        "list_rows" => Request::param("limit"),
+                        "page" => Request::param("page")
+                    ])->each(function ($item, $key) {
+                        unset($item["ukey"]);
+                        return $item;
+                    })->toArray();;
+                } else {
+                    $db = Db::table("user_records")->order(Request::param("sort"), Request::param("sortOrder"))->paginate([
+                        "list_rows" => Request::param("limit"),
+                        "page" => Request::param("page")
+                    ])->each(function ($item, $key) {
+                        unset($item["ukey"]);
+                        return $item;
+                    })->toArray();
                 }
-                $db->order(Request::param("sort"), Request::param("sortOrder"))->paginate([
-                    "list_rows" => Request::param("limit"),
-                    "page" => Request::param("page")
-                ])->each(function ($item, $key) {
-                    unset($item["ukey"]);
-                    return $item;
-                })->toArray();
                 return json([
                     "total" => $db["total"],
                     "rows" => $db["data"]

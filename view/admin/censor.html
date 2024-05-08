@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
-    <title>解析管理 - 学习二级域名分发系统</title>
+    <title>域名审核 - 学习二级域名分发系统</title>
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-touch-fullscreen" content="yes">
@@ -21,6 +21,8 @@
     <!--时间日期选择器css-->
     <link rel="stylesheet" type="text/css" href="/js/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css">
     <link rel="stylesheet" type="text/css" href="/css/style.min.css">
+    <!--对话插件css-->
+    <link rel="stylesheet" type="text/css" href="/js/jquery-confirm/jquery-confirm.min.css">
 </head>
 
 <body>
@@ -64,6 +66,8 @@
     <!--表格插件js-->
     <script src="/js/bootstrap-table/bootstrap-table.js"></script>
     <script src="/js/bootstrap-table/locale/bootstrap-table-zh-CN.min.js"></script>
+    <!--弹窗插件-->
+    <script type="text/javascript" src="/js/jquery-confirm/jquery-confirm.min.js"></script>
 
     <script>
         /**
@@ -122,7 +126,7 @@
         const table = {
             classes: 'table table-bordered table-hover table-striped lyear-table',
             // 请求地址
-            url: '/admin/dns_api',
+            url: '/admin/censor_api',
             // 唯一ID字段
             uniqueId: 'id',
             // 每行的唯一标识字段
@@ -157,11 +161,6 @@
             undefinedText: '-',
             // 排序方式
             sortOrder: "desc",
-            search: true, //******开启搜索框****//
-            searchOnEnterKey: false, //******回车后执行搜索****//
-            strictSearch: true,  //******完全匹配****//
-            trimOnSearch: true, //去除关键词空格//
-            searchAlign: "left",
             ...icon,
             ...pagination,
             ...button
@@ -192,11 +191,6 @@
             title: '用户名',
             titleTooltip: '正在使用的用户名',
         }, {
-            field: 'sub',
-            align: 'center',
-            title: '解析',
-            titleTooltip: '解析主机',
-        }, {
             field: 'type',
             align: 'center',
             title: '类型',
@@ -226,67 +220,111 @@
                 return "未备案";
             }
         }, {
-            field: 'create_time',
+            field: 'audit',
             align: 'center',
-            title: '创建时间',
-            titleTooltip: '子域名创建时间',
+            title: '审查时间',
+            titleTooltip: '上一次该域名的审查时间',
+            sortable: true,
         }, {
             field: 'is_delete',
             align: 'center',
-            title: '域名状态',
+            title: '操作',
             formatter: function (value, row, index) {
-                var bg = "bg-success";
-                var value = "<text class='badge " + bg + "'>运转</text>";
-                if (row.is_delect == 1) {
-                    value = "<text class='badge text-dark'><del>删除</del></text>";
-                } else if (row.is_delect == 2) {
-                    bg = "bg-warning";
-                    value = "<text class='badge " + bg + "'>封禁</text>";
-                }
+                var value = "<text class='badge bg-success'onclick='sc(\"" + row.sub + "." + row.dom + "\"," + row.dns_id + ")'>审查</text><text class='badge bg-warning' onclick='qr(" + row.dns_id + ")'>封禁</text>";
                 return value;
             }
         }];
 
-        // 自定义操作按钮
-        function xg(id, tg) {
-            var l = $('body').lyearloading({
-                opacity: 0.1,              // 遮罩层透明度，为0时不透明
-                backgroundColor: '#ccc',           // 遮罩层背景色
-                imgUrl: '',               // 使用图片时的图片地址
-                textColorClass: 'text-success',   // 文本文字的颜色
-                spinnerColorClass: 'text-success',   // 加载动画的颜色(不使用图片时有效)
-                spinnerSize: 'lg',             // 加载动画的大小(不使用图片时有效，示例：sm/nm/md/lg，也可自定义大小，如：25px)
-                spinnerText: '修改中...',       // 文本文字    
-                zindex: 9999,             // 元素的堆叠顺序值
-            });
+        function sc(url, dns_id) {
             $.ajax({
-                url: "/admin/api",
+                url: "/admin/censor_api",
                 type: "POST",
                 data: {
-                    tag: "invite",
-                    act: "xg",
-                    id: id,
-                    is_lock: tg
+                    "tag": "censor",
+                    "dns_id": dns_id
                 },
                 success: function (data) {
-                    l.hide();
                     if (data.code) {
-                        $('table').bootstrapTable('refresh');
+                        errify(data.msg);
                     } else {
-                        errify(data.msg)
+                        window.open("http://" + url, "_blank");
                     }
                 },
-                error: function (data) {
-                    l.hide();
-                    errify("网络错误")
-                }
+                error: function (data) { 
+                    errify("网络错误");
+                },
             });
         }
 
-        // 操作方法 - 编辑
-        $("#btn_add").click(function () {
-            $("#add").modal("show");
-        });
+        function qr(id) {
+            $.alert({
+                icon: 'mdi mdi-alert',
+                type: 'orange',
+                title: "注意!!",
+                content: '确定要封禁该域名吗？',
+                buttons: {
+                    confirm: {
+                        text: "干他",
+                        btnClass: 'btn-red',
+                        action: function () {
+                            $.confirm({
+                                title: '封禁操作',
+                                content: '<div class="form-group p-1 mb-0">' +
+                                    '  <label class="control-label">请输入操作原因</label>' +
+                                    '  <input autofocus="" type="text" id="input-msg" placeholder="请输入.." class="form-control">' +
+                                    '</div>',
+                                buttons: {
+                                    sayMyName: {
+                                        text: '提交',
+                                        btnClass: 'btn-orange',
+                                        action: function () {
+                                            var input = this.$content.find('input#input-name');
+                                            var errorText = this.$content.find('.text-danger');
+                                            $.ajax({
+                                                url: '/admin/censor_api',
+                                                type: 'post',
+                                                data: {
+                                                    'dns_id': id,
+                                                    'comment': input.val(),
+                                                    'tag': 'ban'
+                                                },
+                                                success: function (data) {
+                                                    if (data.code) {
+                                                        errify(data.msg);
+                                                    } else {
+                                                        $.alert({
+                                                            icon: 'mdi mdi-check',
+                                                            type: 'green',
+                                                            title: "成功",
+                                                            content: '封禁成功',
+                                                            buttons: {
+                                                                confirm: {
+                                                                    text: "好的",
+                                                                    btnClass: 'btn-green'
+                                                                }
+                                                            }
+                                                        });
+                                                        $('table').bootstrapTable('refresh');
+                                                    }
+                                                },
+                                                error: function (data) {
+                                                    errify("封禁失败");
+                                                }
+                                            });
+                                        }
+                                    },
+                                    '取消': function () { }
+                                }
+                            });
+                        }
+                    },
+                    cancel: {
+                        text: "取消"
+                    }
+                }
+            })
+        }
+
         // 错误的弹窗
         function errify(msg) {
             $.notify({
