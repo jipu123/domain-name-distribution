@@ -86,6 +86,41 @@ class Admin extends BaseController
         return View::fetch();
     }
 
+    public function dns()
+    {
+        if (!$this->authenticate()) return redirect("/admin/login");
+        return View::fetch();
+    }
+
+    public function dns_api()
+    {
+        if (!$this->authenticate()) {
+            return json([
+                "code" => 0,
+                "msg" => "鉴权失败"
+            ]);
+        } //鉴权错误
+        switch (Request::param("tag")) {
+            case "list":
+                $db = Db::table("user_records");
+                if (Request::param("search") != "") {
+                    $db->where("domain", "like", "%" . Request::param("search") . "%");
+                }
+                $db->order(Request::param("sort"), Request::param("sortOrder"))->paginate([
+                    "list_rows" => Request::param("limit"),
+                    "page" => Request::param("page")
+                ])->each(function ($item, $key) {
+                    unset($item["ukey"]);
+                    return $item;
+                })->toArray();
+                return json([
+                    "total" => $db["total"],
+                    "rows" => $db["data"]
+                ]);
+                break;
+        }
+    }
+
     public function login_api()
     {
 
@@ -125,12 +160,12 @@ class Admin extends BaseController
         } //鉴权错误
         switch (Request::param("tag")) {
             case "tickets":
-                if(Request::param("act")=="list"){
+                if (Request::param("act") == "list") {
                     $db = Db::table("ticket_from")->order(Request::param("sort"), Request::param("sortOrder"))->paginate([
                         "list_rows" => Request::param("limit"),
                         "page" => Request::param("page")
-                    ])->each(function($item,$key){
-                        $item["count"] = Db::table("tickets")->where("identity",$item["id"])->count();
+                    ])->each(function ($item, $key) {
+                        $item["count"] = Db::table("tickets")->where("identity", $item["id"])->count();
                         return $item;
                     })->toArray();
                     return json([
@@ -155,14 +190,14 @@ class Admin extends BaseController
                 break;
             case "invite":
                 if (Request::param("act") == "list") {
-                $db = Db::table("invite")->order(Request::param("sort"), Request::param("sortOrder"))->paginate([
-                    "list_rows" => Request::param("limit"),
-                    "page" => Request::param("page")
-                ])->toArray();
-                return json([
-                    "total" => $db["total"],
-                    "rows" => $db["data"]
-                ]);
+                    $db = Db::table("invite")->order(Request::param("sort"), Request::param("sortOrder"))->paginate([
+                        "list_rows" => Request::param("limit"),
+                        "page" => Request::param("page")
+                    ])->toArray();
+                    return json([
+                        "total" => $db["total"],
+                        "rows" => $db["data"]
+                    ]);
                 } elseif (Request::param("act") == "xg") {
                     $db = Db::table("invite")->where("id", Request::param("id"))->update(["is_lock" => Request::param("is_lock")]);
                     if ($db) {
@@ -231,7 +266,7 @@ class Admin extends BaseController
                 }
                 break;
             case "user":
-                if(Request::param("act") == "list"){
+                if (Request::param("act") == "list") {
                     $db = Db::table("user_auth")->order(Request::param("sort"), Request::param("sortOrder"))->paginate([
                         "list_rows" => Request::param("limit"),
                         "page" => Request::param("page")
@@ -240,10 +275,10 @@ class Admin extends BaseController
                         "total" => $db["total"],
                         "rows" => $db["data"]
                     ]);
-                }else if(Request::param("act") == "auth"){
+                } else if (Request::param("act") == "auth") {
                     $db = Db::table("auth")->select()->toarray();
                     return json($db);
-                }else if(Request::param("act") == "add"){
+                } else if (Request::param("act") == "add") {
                     $usernick = trim(Request::param("usernick"));
                     $username = trim(Request::param("username"));
                     $password = trim(Request::param("password"));
@@ -251,13 +286,13 @@ class Admin extends BaseController
                     $domain = Request::param("domain");
                     $record = Request::param("record");
                     $auth = Request::param("auth");
-                    if(empty($username) || empty($password) || empty($usernick) || empty($email)){
+                    if (empty($username) || empty($password) || empty($usernick) || empty($email)) {
                         return json([
                             "code" => 0,
                             "msg" => "内容不完整"
                         ]);
                     }
-                    if(Db::table("user")->where("username", $username)->find()){
+                    if (Db::table("user")->where("username", $username)->find()) {
                         return json([
                             "code" => 0,
                             "msg" => "用户名已存在"
@@ -269,19 +304,19 @@ class Admin extends BaseController
                             "msg" => "邮箱格式不正确"
                         ]);
                     }
-                    if(!is_numeric($domain) || !is_numeric($record)){
+                    if (!is_numeric($domain) || !is_numeric($record)) {
                         return json([
                             "code" => 0,
                             "msg" => "必须为数字"
                         ]);
                     }
-                    if(!Db::table("auth")->where("auth", $auth)->find()){
+                    if (!Db::table("auth")->where("auth", $auth)->find()) {
                         return json([
                             "code" => 0,
                             "msg" => "权限不存在"
                         ]);
                     }
-                    if(Db::table("user")->insert([
+                    if (Db::table("user")->insert([
                         "username" => $username,
                         "password" => md5($password),
                         "email" => $email,
@@ -290,19 +325,18 @@ class Admin extends BaseController
                         "record_num" => $record,
                         "ukey" => md5($username . md5($password) . time()),
                         "auth" => $auth
-                    ])){
+                    ])) {
                         return json([
                             "code" => 200,
                             "msg" => "添加成功"
                         ]);
-                    }else{
+                    } else {
                         return json([
                             "code" => 0,
                             "msg" => "添加失败"
                         ]);
                     }
-
-                }else if(Request::param("act") == "xg_lock"){
+                } else if (Request::param("act") == "xg_lock") {
                     $db = Db::table("user_auth")->where("id", Request::param("id"))->update(["is_lock" => Request::param("is_lock")]);
                     if ($db) {
                         return json([
@@ -315,8 +349,8 @@ class Admin extends BaseController
                             "msg" => "修改失败"
                         ]);
                     }
-                }else if(Request::param("act") == "xg_nick"){
-                    if(empty(Request::param("usernick"))){
+                } else if (Request::param("act") == "xg_nick") {
+                    if (empty(Request::param("usernick"))) {
                         return json([
                             "code" => 0,
                             "msg" => "昵称不能为空"
@@ -334,8 +368,8 @@ class Admin extends BaseController
                             "msg" => "修改失败"
                         ]);
                     }
-                }else if(Request::param("act") == "xg_name"){
-                    if(empty(Request::param("username"))){
+                } else if (Request::param("act") == "xg_name") {
+                    if (empty(Request::param("username"))) {
                         return json([
                             "code" => 0,
                             "msg" => "用户名不能为空"
@@ -353,8 +387,8 @@ class Admin extends BaseController
                             "msg" => "修改失败"
                         ]);
                     }
-                }else if(Request::param("act") == "xg_auth"){
-                    if(!Db::table("auth")->where("auth", Request::param("auth"))->find()){
+                } else if (Request::param("act") == "xg_auth") {
+                    if (!Db::table("auth")->where("auth", Request::param("auth"))->find()) {
                         return json([
                             "code" => 0,
                             "msg" => "权限不存在"
@@ -372,7 +406,7 @@ class Admin extends BaseController
                             "msg" => "修改失败"
                         ]);
                     }
-                }else if(Request::param("act") == "xg_email"){
+                } else if (Request::param("act") == "xg_email") {
                     if (!filter_var(Request::param("email"), FILTER_VALIDATE_EMAIL)) {
                         return json([
                             "code" => 0,
@@ -391,15 +425,15 @@ class Admin extends BaseController
                             "msg" => "修改失败"
                         ]);
                     }
-                }else if(Request::param("act") == "xg_domain"){
-                    
-                    if(!is_numeric(Request::param("domain_num"))){
+                } else if (Request::param("act") == "xg_domain") {
+
+                    if (!is_numeric(Request::param("domain_num"))) {
                         return json([
                             "code" => 0,
                             "msg" => "必须为数字"
                         ]);
                     }
-                    if(Request::param("domain_num") < 0){
+                    if (Request::param("domain_num") < 0) {
                         return json([
                             "code" => 0,
                             "msg" => "不能小于0"
@@ -417,14 +451,14 @@ class Admin extends BaseController
                             "msg" => "修改失败"
                         ]);
                     }
-                }else if(Request::param("act") == "xg_record"){
-                    if(!is_numeric(Request::param("record_num"))){
+                } else if (Request::param("act") == "xg_record") {
+                    if (!is_numeric(Request::param("record_num"))) {
                         return json([
                             "code" => 0,
                             "msg" => "必须为数字"
                         ]);
                     }
-                    if(Request::param("record_num") < 0){
+                    if (Request::param("record_num") < 0) {
                         return json([
                             "code" => 0,
                             "msg" => "不能小于0"
@@ -442,8 +476,8 @@ class Admin extends BaseController
                             "msg" => "修改失败"
                         ]);
                     }
-                }else if(Request::param("act") == "xg_pass"){
-                    if(empty(Request::param("password"))){
+                } else if (Request::param("act") == "xg_pass") {
+                    if (empty(Request::param("password"))) {
                         return json([
                             "code" => 0,
                             "msg" => "密码不能为空"
@@ -463,80 +497,80 @@ class Admin extends BaseController
                     }
                 }
                 break;
-                case "domain":
-                    if(Request::param("act") == "list"){
-                        $db = Db::table("domain")->order(Request::param("sort"), Request::param("sortOrder"))->paginate([
-                            "list_rows" => Request::param("limit"),
-                            "page" => Request::param("page")
-                        ])->toArray();
+            case "domain":
+                if (Request::param("act") == "list") {
+                    $db = Db::table("domain")->order(Request::param("sort"), Request::param("sortOrder"))->paginate([
+                        "list_rows" => Request::param("limit"),
+                        "page" => Request::param("page")
+                    ])->toArray();
+                    return json([
+                        "total" => $db["total"],
+                        "rows" => $db["data"]
+                    ]);
+                } else if (Request::param("act") == "xg_state") {
+                    $db = Db::table("domain")->where("id", Request::param("id"))->update(["state" => Request::param("state")]);
+                    if ($db) {
                         return json([
-                            "total" => $db["total"],
-                            "rows" => $db["data"]
+                            "code" => 200,
+                            "msg" => "修改成功"
                         ]);
-                    }else if(Request::param("act") == "xg_state"){
-                        $db = Db::table("domain")->where("id", Request::param("id"))->update(["state" => Request::param("state")]);
-                        if ($db) {
-                            return json([
-                                "code" => 200,
-                                "msg" => "修改成功"
-                            ]);
-                        } else {
-                            return json([
-                                "code" => 0,
-                                "msg" => "修改失败"
-                            ]);
-                        }
-                    }else if(Request::param("act") == "xg_ba"){
-                        $db = Db::table("domain")->where("id", Request::param("id"))->update(["is_record" => Request::param("is_record")]);
-                        if ($db) {
-                            return json([
-                                "code" => 200,
-                                "msg" => "修改成功"
-                            ]);
-                        } else {
-                            return json([
-                                "code" => 0,
-                                "msg" => "修改失败"
-                            ]);
-                        }
-                    }else if(Request::param("act") == "add"){
-                        if(empty(Request::param("domain"))){
-                            return json([
-                                "code" => 0,
-                                "msg" => "域名不能为空"
-                            ]);
-                        }
-                        if (!preg_match('/^(?:[-A-Za-z0-9]+\.)+[A-Za-z]{2,6}$/', Request::param("domain"))) {
-                            return json([
-                                "code" => 0,
-                                "msg" => "域名格式不正确"
-                            ]);
-                        }
-                        $db = Db::table("domain")->where("dom", Request::param("domain"))->find();
-                        if($db){
-                            return json([
-                                "code" => 0,
-                                "msg" => "域名已存在"
-                            ]);
-                        }
-                        $db = Db::table("domain")->insert([
-                            "dom" => Request::param("domain"),
-                            "is_record" => Request::param("record"),
-                            "state" => 1
+                    } else {
+                        return json([
+                            "code" => 0,
+                            "msg" => "修改失败"
                         ]);
-                        if ($db) {
-                            return json([
-                                "code" => 200,
-                                "msg" => "添加成功"
-                            ]);
-                        } else {
-                            return json([
-                                "code" => 0,
-                                "msg" => "添加失败"
-                            ]);
-                        }
                     }
-                    break;
+                } else if (Request::param("act") == "xg_ba") {
+                    $db = Db::table("domain")->where("id", Request::param("id"))->update(["is_record" => Request::param("is_record")]);
+                    if ($db) {
+                        return json([
+                            "code" => 200,
+                            "msg" => "修改成功"
+                        ]);
+                    } else {
+                        return json([
+                            "code" => 0,
+                            "msg" => "修改失败"
+                        ]);
+                    }
+                } else if (Request::param("act") == "add") {
+                    if (empty(Request::param("domain"))) {
+                        return json([
+                            "code" => 0,
+                            "msg" => "域名不能为空"
+                        ]);
+                    }
+                    if (!preg_match('/^(?:[-A-Za-z0-9]+\.)+[A-Za-z]{2,6}$/', Request::param("domain"))) {
+                        return json([
+                            "code" => 0,
+                            "msg" => "域名格式不正确"
+                        ]);
+                    }
+                    $db = Db::table("domain")->where("dom", Request::param("domain"))->find();
+                    if ($db) {
+                        return json([
+                            "code" => 0,
+                            "msg" => "域名已存在"
+                        ]);
+                    }
+                    $db = Db::table("domain")->insert([
+                        "dom" => Request::param("domain"),
+                        "is_record" => Request::param("record"),
+                        "state" => 1
+                    ]);
+                    if ($db) {
+                        return json([
+                            "code" => 200,
+                            "msg" => "添加成功"
+                        ]);
+                    } else {
+                        return json([
+                            "code" => 0,
+                            "msg" => "添加失败"
+                        ]);
+                    }
+                }
+                break;
         }
         print_r(Request::param());
     }
@@ -558,7 +592,7 @@ class Admin extends BaseController
             //鉴权不通过
             return false;
         }
-        Db::table("user")->where("id",$sql["id"])->update(["update_time" => date("Y-m-d H:i:s",time())]);
+        Db::table("user")->where("id", $sql["id"])->update(["update_time" => date("Y-m-d H:i:s", time())]);
         return true;
     }
 }
