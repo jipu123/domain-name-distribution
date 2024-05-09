@@ -17,6 +17,8 @@ use \Exception;
 use AlibabaCloud\Tea\Exception\TeaError;
 use AlibabaCloud\Tea\Utils\Utils;
 
+use PHPMailer\PHPMailer\PHPMailer;
+
 use Darabonba\OpenApi\Models\Config;
 use AlibabaCloud\SDK\Alidns\V20150109\Models\DescribeSubDomainRecordsRequest;
 use AlibabaCloud\SDK\Alidns\V20150109\Models\DeleteDomainRecordRequest;
@@ -40,7 +42,7 @@ class user extends BaseController
         View::assign($user);
         View::assign("record_count", Db::table("records")->where("user_id", $user["id"])->count());
         View::assign("domain_count", Db::table("domain")->count());
-        View::assign("domain",Db::table("domain")->select()->each(function ($item, $key) {
+        View::assign("domain", Db::table("domain")->select()->each(function ($item, $key) {
             $item["nums"] = Db::table("records")->where("dom_id", $item["id"])->count();
             return $item;
         })->toArray());
@@ -216,7 +218,7 @@ class user extends BaseController
                 $arrs = explode(".", $domain["dom"]);
                 $addDomainRecordRequest = new AddDomainRecordRequest([
                     "domainName" => $arrs[1] . "." . $arrs[2],
-                    "RR" => Request::param("sub").".".$arrs[0],
+                    "RR" => Request::param("sub") . "." . $arrs[0],
                     "type" => Request::param("type"),
                     "value" => Request::param("value"),
                 ]);
@@ -256,13 +258,17 @@ class user extends BaseController
                 "value" => Request::param("value"),
                 "create_time" => date("Y-m-d H:i:s", time())
             ];
+            $body = $this->MailBody($user["usernick"], 2, Request::param("sub") . "." . $domain["dom"], Request::param("type"), Request::param("value"), "");
+            $this->SendEmail($user["email"], $body);
             Db::table("records")->insert($data); //更新数据
+            return json(["code" => 00, "msg" => "添加成功"]);
+
             return json(["code" => 0, "msg" => "添加成功"]);
-        }else if(Request::param("act") == "del"){
+        } else if (Request::param("act") == "del") {
             //删除
             $user = Db::table("user")->where("ukey", cookie("ukey"))->find();
             $records = Db::table("records")->where("id", Request::param("id"))->where("is_delect", 0)->find();
-            if(!$records){
+            if (!$records) {
                 return json(["code" => 300, "msg" => "解析记录不存在"]);
             }
             $domain = Db::table("domain")->where("id", $records["dom_id"])->where("state", 0)->find();
@@ -286,14 +292,16 @@ class user extends BaseController
             } catch (Exception $error) {
                 return json(["code" => 300, "msg" => $error->getMessage()]);
             }
-            if($domain["is_record"] == 1){
+            if ($domain["is_record"] == 1) {
                 //已经备案
                 Db::table("user")->where("id", $user["id"])->inc("record_num")->update();
-            }else{
+            } else {
                 //未备案
                 Db::table("user")->where("id", $user["id"])->inc("domain_num")->update();
             }
             Db::table("records")->where("id", Request::param("id"))->update(["is_delect" => 1]);
+            $body = $this->MailBody($user["usernick"], 1, $records["sub"] . "." . $domain["dom"], $records["type"], $records["value"], "");
+            $this->SendEmail($user["email"], $body);
             return json(["code" => 0, "msg" => "删除成功"]);
         }
     }
@@ -345,5 +353,55 @@ class user extends BaseController
         }
         Db::table("user")->where("id", $sql["id"])->update(["update_time" => date("Y-m-d H:i:s", time())]);
         return true;
+    }
+
+    private function MailBody($usernick, $type, $domain, $DnsType, $value, $msg)
+    {
+        $body = "<div><h4>尊敬的用户 " . $usernick . " :</h4><p>";
+        if ($type == 1) {
+            $body = $body . "您对域名" . $domain . "进行了解析记录的删除操作。";
+        } else if ($type == 2) {
+            $body = $body . "您添加了域名" . $domain;
+        } else {
+            $body = $body . "管理员封禁了您的域名" . $domain . ",封禁域名不会返还域名额度";
+        }
+        $body = $body . "</p><table><tr><th>记录类型</th><th>主机记录</th><th>域名</th></tr><tr><td>" . $DnsType .
+            "</td><td>" . $value . "</td><td>" . $domain . "</td></tr></table>";
+        if ($type != 1 && $type != 2) {
+            $body = $body . "<p>封禁原因:" . $msg . "</p>";
+        }
+        $body = $body . "</div>";
+        return $body;
+    }
+
+    private function SendEmail($target, $body)
+    {
+        $mail = new PHPMailer(true);                              // Passing `true` enables exceptions
+        try {
+            //服务器配置
+            $mail->CharSet = "UTF-8";                     //设定邮件编码
+            $mail->SMTPDebug = 0;                        // 调试模式输出
+            $mail->isSMTP();                             // 使用SMTP
+            $mail->Host = Env::get("EMAIL.SERVER");                // SMTP服务器
+            $mail->SMTPAuth = true;                      // 允许 SMTP 认证
+            $mail->Username = Env::get("EMAIL.USEREMAIL");               // SMTP 用户名  即邮箱的用户名
+            $mail->Password = Env::get("EMAIL.PWD");               // SMTP 密码  部分邮箱是授权码(例如163邮箱)
+            $mail->SMTPSecure = Env::get("EMAIL.SMTPSECURE");                    // 允许 TLS 或者ssl协议
+            $mail->Port = Env::get("EMAIL.PROT");                            // 服务器端口 25 或者465 具体要看邮箱服务器支持
+
+            $mail->setFrom(Env::get("EMAIL.USEREMAIL"), '学习域名分发');  //发件人
+            $mail->addAddress($target, '尊敬的用户');  // 收件人
+            $mail->addReplyTo(Env::get("EMAIL.USEREMAIL"), 'info'); //回复的时候回复给哪个邮箱 建议和发件人一致
+
+            //Content
+            $mail->isHTML(true);                                  // 是否以HTML文档格式发送  发送后客户端可直接显示对应HTML内容
+            $mail->Subject = '你的dns解析改变,请查收';
+            $mail->Body    = $body;
+
+            $mail->send();
+            return true;
+        } catch (Exception $e) {
+            echo '邮件发送失败: ', $mail->ErrorInfo;
+        }
     }
 }

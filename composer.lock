@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7e82becc237b26cb6842b8710926da07",
+    "content-hash": "e0469590f74eb188e645604f9fd72e66",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -250,6 +250,104 @@
                 "source": "https://github.com/alibabacloud-sdk-php/darabonba-openapi/tree/0.2.10"
             },
             "time": "2023-11-23T07:01:20+00:00"
+        },
+        {
+            "name": "alibabacloud/dm-20151123",
+            "version": "1.0.10",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/alibabacloud-sdk-php/dm-20151123.git",
+                "reference": "23a374f23d9080111c1d1ba4b5a560d07bf3aa22"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/alibabacloud-sdk-php/dm-20151123/zipball/23a374f23d9080111c1d1ba4b5a560d07bf3aa22",
+                "reference": "23a374f23d9080111c1d1ba4b5a560d07bf3aa22",
+                "shasum": "",
+                "mirrors": [
+                    {
+                        "url": "https://mirrors.aliyun.com/composer/dists/%package%/%reference%.%type%",
+                        "preferred": true
+                    }
+                ]
+            },
+            "require": {
+                "alibabacloud/darabonba-openapi": "^0.2.10",
+                "alibabacloud/endpoint-util": "^0.1.0",
+                "alibabacloud/openapi-util": "^0.1.10|^0.2.1",
+                "alibabacloud/tea-utils": "^0.2.19",
+                "php": ">5.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "AlibabaCloud\\SDK\\Dm\\V20151123\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Alibaba Cloud SDK",
+                    "email": "sdk-team@alibabacloud.com"
+                }
+            ],
+            "description": "Alibaba Cloud Dm (20151123) SDK Library for PHP",
+            "support": {
+                "source": "https://github.com/alibabacloud-sdk-php/dm-20151123/tree/1.0.10"
+            },
+            "time": "2024-02-20T17:15:23+00:00"
+        },
+        {
+            "name": "alibabacloud/dysmsapi-20170525",
+            "version": "2.0.23",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/alibabacloud-sdk-php/Dysmsapi-20170525.git",
+                "reference": "f743fce2182cb503962c37cba2ce4ba71642e89e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/alibabacloud-sdk-php/Dysmsapi-20170525/zipball/f743fce2182cb503962c37cba2ce4ba71642e89e",
+                "reference": "f743fce2182cb503962c37cba2ce4ba71642e89e",
+                "shasum": "",
+                "mirrors": [
+                    {
+                        "url": "https://mirrors.aliyun.com/composer/dists/%package%/%reference%.%type%",
+                        "preferred": true
+                    }
+                ]
+            },
+            "require": {
+                "alibabacloud/darabonba-openapi": "^0.2.8",
+                "alibabacloud/endpoint-util": "^0.1.0",
+                "alibabacloud/openapi-util": "^0.1.10|^0.2.0",
+                "alibabacloud/tea-utils": "^0.2.17",
+                "php": ">5.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "AlibabaCloud\\SDK\\Dysmsapi\\V20170525\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Alibaba Cloud SDK",
+                    "email": "sdk-team@alibabacloud.com"
+                }
+            ],
+            "description": "Alibaba Cloud Dysmsapi (20170525) SDK Library for PHP",
+            "support": {
+                "source": "https://github.com/alibabacloud-sdk-php/Dysmsapi-20170525/tree/2.0.23"
+            },
+            "time": "2022-11-29T07:24:48+00:00"
         },
         {
             "name": "alibabacloud/endpoint-util",
@@ -1185,6 +1283,93 @@
                 }
             ],
             "time": "2021-05-26T06:19:22+00:00"
+        },
+        {
+            "name": "phpmailer/phpmailer",
+            "version": "v6.9.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/PHPMailer/PHPMailer.git",
+                "reference": "039de174cd9c17a8389754d3b877a2ed22743e18"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/039de174cd9c17a8389754d3b877a2ed22743e18",
+                "reference": "039de174cd9c17a8389754d3b877a2ed22743e18",
+                "shasum": "",
+                "mirrors": [
+                    {
+                        "url": "https://mirrors.aliyun.com/composer/dists/%package%/%reference%.%type%",
+                        "preferred": true
+                    }
+                ]
+            },
+            "require": {
+                "ext-ctype": "*",
+                "ext-filter": "*",
+                "ext-hash": "*",
+                "php": ">=5.5.0"
+            },
+            "require-dev": {
+                "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+                "doctrine/annotations": "^1.2.6 || ^1.13.3",
+                "php-parallel-lint/php-console-highlighter": "^1.0.0",
+                "php-parallel-lint/php-parallel-lint": "^1.3.2",
+                "phpcompatibility/php-compatibility": "^9.3.5",
+                "roave/security-advisories": "dev-latest",
+                "squizlabs/php_codesniffer": "^3.7.2",
+                "yoast/phpunit-polyfills": "^1.0.4"
+            },
+            "suggest": {
+                "decomplexity/SendOauth2": "Adapter for using XOAUTH2 authentication",
+                "ext-mbstring": "Needed to send email in multibyte encoding charset or decode encoded addresses",
+                "ext-openssl": "Needed for secure SMTP sending and DKIM signing",
+                "greew/oauth2-azure-provider": "Needed for Microsoft Azure XOAUTH2 authentication",
+                "hayageek/oauth2-yahoo": "Needed for Yahoo XOAUTH2 authentication",
+                "league/oauth2-google": "Needed for Google XOAUTH2 authentication",
+                "psr/log": "For optional PSR-3 debug logging",
+                "symfony/polyfill-mbstring": "To support UTF-8 if the Mbstring PHP extension is not enabled (^1.2)",
+                "thenetworg/oauth2-azure": "Needed for Microsoft XOAUTH2 authentication"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "PHPMailer\\PHPMailer\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "LGPL-2.1-only"
+            ],
+            "authors": [
+                {
+                    "name": "Marcus Bointon",
+                    "email": "phpmailer@synchromedia.co.uk"
+                },
+                {
+                    "name": "Jim Jagielski",
+                    "email": "jimjag@gmail.com"
+                },
+                {
+                    "name": "Andy Prevost",
+                    "email": "codeworxtech@users.sourceforge.net"
+                },
+                {
+                    "name": "Brent R. Matzelle"
+                }
+            ],
+            "description": "PHPMailer is a full-featured email creation and transfer class for PHP",
+            "support": {
+                "issues": "https://github.com/PHPMailer/PHPMailer/issues",
+                "source": "https://github.com/PHPMailer/PHPMailer/tree/v6.9.1"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/Synchro",
+                    "type": "github"
+                }
+            ],
+            "time": "2023-11-25T22:23:28+00:00"
         },
         {
             "name": "psr/cache",
