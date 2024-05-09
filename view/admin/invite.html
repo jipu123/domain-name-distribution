@@ -339,7 +339,7 @@
             formatter: function (value, row, index) {
                 var value = "";
                 if (row.is_lock == 1) {
-                    value = '<span class="badge bg-light" data-bs-toggle="tooltip" data-bs-placement="bottom" title="单击修改" onclick="xg(' + row.id + ',0)">禁用</span>';
+                    value = '<span class="badge bg-light text-dark" data-bs-toggle="tooltip" data-bs-placement="bottom" title="单击修改" onclick="xg(' + row.id + ',0)">禁用</span>';
                 } else if (new Date(row.over_time).getTime() < new Date().getTime()) {
                     value = '<span class="badge bg-light">到期</span>';
                 } else if (row.current >= row.max) {

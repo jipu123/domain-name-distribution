@@ -264,7 +264,7 @@
             formatter: function (value, row, index) {
                 var value = "";
                 if (row.state == 1) {
-                    value = '<span class="badge bg-light" data-bs-toggle="tooltip" data-bs-placement="bottom" title="单击修改" onclick="xg(' + row.id + ',0)">暂停</span></span>';
+                    value = '<span class="badge bg-light text-dark" data-bs-toggle="tooltip" data-bs-placement="bottom" title="单击修改" onclick="xg(' + row.id + ',0)">暂停</span></span>';
                 } else {
                     value = '<span class="badge bg-success" data-bs-toggle="tooltip" data-bs-placement="bottom" title="单击修改" onclick="xg(' + row.id + ',1)">正常</span>';
                 }

@@ -324,7 +324,7 @@
                     act: "del"
                 },
                 success: function (data) {
-                    if (data.code == 200) {
+                    if (!data.code) {
                         $.notify({
                             icon: 'mdi mdi-check',
                             message: data.msg
