@@ -263,6 +263,19 @@ class Admin extends BaseController
                         "total" => $db["total"],
                         "rows" => $db["data"]
                     ]);
+                }else  if(Request::param("act") == "xg"){
+                    $db = Db::table("ticket_from")->where("id", Request::param("id"))->update(["is_lock" => Request::param("is_lock")]);
+                    if ($db) {
+                        return json([
+                            "code" => 0,
+                            "msg" => "修改成功"
+                        ]);
+                    } else {
+                        return json([
+                            "code" => 200,
+                            "msg" => "修改失败"
+                        ]);
+                    }
                 }
                 break;
             case "update_password":
@@ -602,12 +615,12 @@ class Admin extends BaseController
                     $db = Db::table("domain")->where("id", Request::param("id"))->update(["state" => Request::param("state")]);
                     if ($db) {
                         return json([
-                            "code" => 200,
+                            "code" => 0,
                             "msg" => "修改成功"
                         ]);
                     } else {
                         return json([
-                            "code" => 0,
+                            "code" => 200,
                             "msg" => "修改失败"
                         ]);
                     }

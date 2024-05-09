@@ -295,7 +295,7 @@
                 },
                 success: function (data) {
                     l.hide();
-                    if (data.code) {
+                    if (!data.code) {
                         $('table').bootstrapTable('refresh');
                     } else {
                         errify(data.msg)
