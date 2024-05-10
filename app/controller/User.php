@@ -96,6 +96,108 @@ class user extends BaseController
         return View::fetch();
     }
 
+    public function reply()
+    {
+        if (!$this->authenticate()) return redirect("/user/login");
+        return View::fetch();
+    }
+
+    public function reply_api()
+    {
+        if (!$this->authenticate()) {
+            return json([
+                "code" => 0,
+                "msg" => "鉴权失败"
+            ]);
+        } //鉴权错误
+        switch (Request::param("tag")) {
+            case "from":
+                $user = Db::table("user")->where("ukey", cookie("ukey"))->find();
+                $db = Db::table("ticket_from")->where("user_id", $user["id"])->order(Request::param("sort"), Request::param("sortOrder"))->paginate([
+                    "list_rows" => Request::param("limit"),
+                    "page" => Request::param("page")
+                ])->each(function ($item, $key) {
+                    $item["count"] = Db::table("tickets")->where("identity", $item["id"])->count();
+                    return $item;
+                })->toArray();
+                return json([
+                    "total" => $db["total"],
+                    "rows" => $db["data"]
+                ]);
+                break;
+            case "list":
+                $user = Db::table("user")->where("ukey", cookie("ukey"))->find();
+                $sql = Db::table("ticket_from")->where("user_id", $user["id"])->where("id", Request::param("id"))->find();
+                if (!$sql) {
+                    return json([
+                        "code" => 200,
+                        "msg" => "无权访问"
+                    ]);
+                }
+                $db = Db::table("ticket_view")->where("identity", Request::param("id"))->select()->toArray();
+                $ticket = Db::table("ticket_from")->where("id", Request::param("id"))->find();
+                return json([
+                    "code" => 0,
+                    "total" => count($db),
+                    "rows" => $db,
+                    "user" => $user["id"],
+                    "title" => $ticket["title"],
+                ]);
+                break;
+            case "add":
+                $user = Db::table("user")->where("ukey", cookie("ukey"))->find();
+                $data = [
+                    "title" =>Request::param("title"),
+                    "user_id" => $user["id"],
+                ];
+                Db::table("ticket_from")->insert($data);
+                $db = Db::table("ticket_from")->where("user_id", $user["id"])->order("id", "desc")->find();
+                return json([
+                    "id" => $db["id"],
+                    "code" => 0,
+                ]);
+                break;
+            case "msg":
+                $user = Db::table("user")->where("ukey", cookie("ukey"))->find();
+                $sql = Db::table("ticket_from")->where("user_id", $user["id"])->where("id", Request::param("id"))->find();
+                if (!$sql) {
+                    return json([
+                        "code" => 200,
+                        "msg" => "无权访问"
+                    ]);
+                }
+                if (Request::param("msg") == "") {
+                    return json([
+                        "code" => 200,
+                        "msg" => "内容不能为空"
+                    ]);
+                }
+                if ($sql["is_lock"] == 1) {
+                    return json([
+                        "code" => 200,
+                        "msg" => "工单已关闭"
+                    ]);
+                }
+                $body = $this->ReplyEmail($user, Request::param("msg"), $sql);
+                $admin = Db::table("user")->where("auth", 999)->find();
+                $this->SendEmail($admin["email"], $body, "工单回复: " . $sql["title"]);
+                $data = [
+                    "identity" => Request::param("id"),
+                    "user" => $user["id"],
+                    "msg" => Request::param("msg"),
+                ];
+                Db::table("tickets")->insert($data);
+                Db::table("ticket_from")->where('id', Request::param("id"))->update([
+                    "update_time" =>date("Y-m-d H:i:s", time()),
+                ]);
+                return json([
+                    "code" => 0,
+                    "msg" => "回复成功"
+                ]);
+                break;
+        }
+    }
+
     public function enroll_api()
     {
         if (!captcha_check(Request::param("captcha"))) {
@@ -259,7 +361,7 @@ class user extends BaseController
                 "create_time" => date("Y-m-d H:i:s", time())
             ];
             $body = $this->MailBody($user["usernick"], 2, Request::param("sub") . "." . $domain["dom"], Request::param("type"), Request::param("value"), "");
-            $this->SendEmail($user["email"], $body);
+            $this->SendEmail($user["email"], $body, '你的dns解析改变,请查收');
             Db::table("records")->insert($data); //更新数据
             return json(["code" => 00, "msg" => "添加成功"]);
 
@@ -301,7 +403,7 @@ class user extends BaseController
             }
             Db::table("records")->where("id", Request::param("id"))->update(["is_delect" => 1]);
             $body = $this->MailBody($user["usernick"], 1, $records["sub"] . "." . $domain["dom"], $records["type"], $records["value"], "");
-            $this->SendEmail($user["email"], $body);
+            $this->SendEmail($user["email"], $body, '你的dns解析改变,请查收');
             return json(["code" => 0, "msg" => "删除成功"]);
         }
     }
@@ -355,6 +457,14 @@ class user extends BaseController
         return true;
     }
 
+    private function ReplyEmail($user, $msg, $from)
+    {
+        $body = "<div><h4>尊敬的管理员 :</h4>";
+        $body = $body . "<p>用户 " . $user["usernick"] . " 回复 " . $from["title"] . ":</p>";
+        $body = $body . "<p>" . $msg . "</p></div>";
+        return $body;
+    }
+
     private function MailBody($usernick, $type, $domain, $DnsType, $value, $msg)
     {
         $body = "<div><h4>尊敬的用户 " . $usernick . " :</h4><p>";
@@ -374,7 +484,7 @@ class user extends BaseController
         return $body;
     }
 
-    private function SendEmail($target, $body)
+    private function SendEmail($target, $body, $title)
     {
         $mail = new PHPMailer(true);                              // Passing `true` enables exceptions
         try {
@@ -395,7 +505,7 @@ class user extends BaseController
 
             //Content
             $mail->isHTML(true);                                  // 是否以HTML文档格式发送  发送后客户端可直接显示对应HTML内容
-            $mail->Subject = '你的dns解析改变,请查收';
+            $mail->Subject = $title;
             $mail->Body    = $body;
 
             $mail->send();

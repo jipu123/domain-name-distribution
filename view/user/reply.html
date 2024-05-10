@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
-    <title>工单管理 - 学习二级域名分发系统</title>
+    <title>工单查看 - 学习二级域名分发系统</title>
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-touch-fullscreen" content="yes">
@@ -35,6 +35,11 @@
                         <div class="card-title">工单管理</div>
                     </header>
                     <div class="card-body">
+                        <div id="toolbar" class="toolbar-btn-action">
+                            <button id="btn_add" type="button" class="btn btn-primary me-1">
+                                <span class="mdi mdi-plus" aria-hidden="true"></span>发起工单
+                            </button>
+                        </div>
                         <table id="table"></table>
 
                     </div>
@@ -43,6 +48,28 @@
 
         </div>
 
+    </div>
+    <div class="modal fade" id="reply" tabindex="-1" aria-labelledby="exampleModalLiveLabel1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title" id="exampleModalLiveLabel1">发起工单</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="list-group">
+                    </ul>
+                    <div class="mb-3">
+                        <label for="title_input" class="form-label">标题</label>
+                        <input type="text" class="form-control" id="title_input" placeholder="工单标题" name="invite">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    <button type="submit" class="btn btn-primary" onclick="add()">回复</button>
+                </div>
+            </div>
+        </div>
     </div>
     <div class="modal fade" id="add" tabindex="-1" aria-labelledby="exampleModalLiveLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
@@ -89,6 +116,44 @@
     <script src="/js/bootstrap-table/locale/bootstrap-table-zh-CN.min.js"></script>
 
     <script>
+        function add() {
+            var l = $('body').lyearloading({
+                opacity: 0.1,              // 遮罩层透明度，为0时不透明
+                backgroundColor: '#ccc',           // 遮罩层背景色
+                imgUrl: '',               // 使用图片时的图片地址
+                textColorClass: 'text-success',   // 文本文字的颜色
+                spinnerColorClass: 'text-success',   // 加载动画的颜色(不使用图片时有效)
+                spinnerSize: 'lg',             // 加载动画的大小(不使用图片时有效，示例：sm/nm/md/lg，也可自定义大小，如：25px)
+                spinnerText: '加载中...',       // 文本文字    
+                zindex: 9999,             // 元素的堆叠顺序值
+            });
+            $.ajax({
+                url: "/user/reply_api",
+                type: "POST",
+                data: {
+                    title: $("#title_input").val(),
+                    tag: "add"
+                },
+                success: function(data) {
+                    if (!data.code) {
+                        l.hide();
+                        $("#reply").modal("hide");
+                        $('#table').bootstrapTable('refresh');
+                        go(data.id);
+                    } else {
+                        l.hide();
+                        errify(data.msg);
+                    }
+                },
+                error: function() {
+                    l.hide();
+                    errify("网络错误");
+                }
+            });
+        }
+        $("#btn_add").click(function() {
+            $("#reply").modal("show");
+        });
         function up(){
             var l = $('body').lyearloading({
                 opacity: 0.1,              // 遮罩层透明度，为0时不透明
@@ -101,7 +166,7 @@
                 zindex: 9999,             // 元素的堆叠顺序值
             });
             $.ajax({
-                url: "/admin/reply_api",
+                url: "/user/reply_api",
                 type: "post",
                 data: {
                     id: $("#id").val(),
@@ -115,7 +180,7 @@
                         $('#table').bootstrapTable('refresh');  
                         $("#msg_input").val("");
                     } else {
-                        errify("加载失败");
+                        errify(data.msg);
                     }
                 },
                 error: function () {
@@ -136,7 +201,7 @@
                 zindex: 9999,             // 元素的堆叠顺序值
             });
             $.ajax({
-                url: "/admin/reply_api",
+                url: "/user/reply_api",
                 type: "post",
                 data: {
                     id: param,
@@ -224,7 +289,7 @@
         const table = {
             classes: 'table table-bordered table-hover table-striped lyear-table',
             // 请求地址
-            url: '/admin/api',
+            url: '/user/reply_api',
             // 唯一ID字段
             uniqueId: 'id',
             // 每行的唯一标识字段
@@ -301,9 +366,9 @@
             formatter: function (value, row, index) {
                 var value = "";
                 if (row.is_lock == 1) {
-                    value = '<span class="badge bg-light text-dark" data-bs-toggle="tooltip" data-bs-placement="bottom" title="单击修改" onclick="xg(' + row.id + ',0)">锁定</span>';
+                    value = '<span class="badge bg-light text-dark"  >锁定</span>';
                 } else {
-                    value = '<span class="badge bg-success" data-bs-toggle="tooltip" data-bs-placement="bottom" title="单击修改" onclick="xg(' + row.id + ',1)">正常</span>';
+                    value = '<span class="badge bg-success" >正常</span>';
                 }
                 return value;
             }
@@ -317,41 +382,6 @@
         }];
 
 
-        // 自定义操作按钮
-        function xg(id, tg) {
-            var l = $('body').lyearloading({
-                opacity: 0.1,              // 遮罩层透明度，为0时不透明
-                backgroundColor: '#ccc',           // 遮罩层背景色
-                imgUrl: '',               // 使用图片时的图片地址
-                textColorClass: 'text-success',   // 文本文字的颜色
-                spinnerColorClass: 'text-success',   // 加载动画的颜色(不使用图片时有效)
-                spinnerSize: 'lg',             // 加载动画的大小(不使用图片时有效，示例：sm/nm/md/lg，也可自定义大小，如：25px)
-                spinnerText: '修改中...',       // 文本文字    
-                zindex: 9999,             // 元素的堆叠顺序值
-            });
-            $.ajax({
-                url: "/admin/api",
-                type: "POST",
-                data: {
-                    tag: "tickets",
-                    act: "xg",
-                    id: id,
-                    is_lock: tg
-                },
-                success: function (data) {
-                    l.hide();
-                    if (!data.code) {
-                        $('table').bootstrapTable('refresh');
-                    } else {
-                        errify(data.msg)
-                    }
-                },
-                error: function (data) {
-                    l.hide();
-                    errify("网络错误")
-                }
-            });
-        }
         // 错误的弹窗
         function errify(msg) {
             $.notify({
@@ -395,8 +425,7 @@
                     sort: params.sort,
                     // 排序方式 'asc' 'desc'
                     sortOrder: params.order,
-                    tag: "tickets",
-                    act: "list"
+                    tag: "from",
                 };
             },
             columns,

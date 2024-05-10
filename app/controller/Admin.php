@@ -89,6 +89,50 @@ class Admin extends BaseController
         return View::fetch();
     }
 
+    public function reply_api()
+    {
+        if (!$this->authenticate()) {
+            return json([
+                "code" => 200,
+                "msg" => "鉴权失败"
+            ]);
+        } //鉴权错误
+        switch (Request::param("tag")) {
+            case "list":
+                $db = Db::table("ticket_view")->where("identity", Request::param("id"))->select()->toArray();
+                $user = Db::table("user")->where("ukey", cookie("ukey"))->find();
+                $ticket = Db::table("ticket_from")->where("id", Request::param("id"))->find();
+                return json([
+                    "code" => 0,
+                    "total" => count($db),
+                    "rows" => $db,
+                    "user" => $user["id"],
+                    "title" => $ticket["title"],
+                ]);
+                break;
+            case "msg":
+                $user = Db::table("user")->where("ukey", cookie("ukey"))->find();
+                $data = [
+                    "identity" => Request::param("id"),
+                    "user" => $user["id"],
+                    "msg" => Request::param("msg"),
+                ];
+                $sql = Db::table("ticket_from")->where("id", Request::param("id"))->find();
+                $user1 = Db::table("user")->where("id", $sql["user_id"])->find();
+                $body = $this->ReplyEmail($user,Request::param("msg"),$sql);
+                $this->SendEmail($user1["email"],$body,"管理员回复了工单: ".$sql["title"]);
+                Db::table("tickets")->insert($data);
+                Db::table("ticket_from")->where('id', Request::param("id"))->update([
+                    "update_time" =>date("Y-m-d H:i:s", time()),
+                ]);
+                return json([
+                    "code" => 0,
+                    "msg" => "回复成功"
+                ]);
+                break;
+        }
+    }
+
     public function censor_api()
     {
         if (!$this->authenticate()) {
@@ -146,8 +190,8 @@ class Admin extends BaseController
                     "is_delect" => 2,
                     "audit" => date("Y-m-d H:i:s", time())
                 ]); //更新数据库的datetime时间
-                $body = $this->MailBody($user["usernick"],3,$sub.".".$domain["dom"],$record["type"],$record["value"],Request::param("comment"));
-                $this->SendEmail($user["email"],$body);
+                $body = $this->MailBody($user["usernick"], 3, $sub . "." . $domain["dom"], $record["type"], $record["value"], Request::param("comment"));
+                $this->SendEmail($user["email"], $body ,"你的dns解析被封禁");
                 return json(["code" => 00, "msg" => "封禁成功"]);
                 break;
             case "censor":
@@ -248,7 +292,7 @@ class Admin extends BaseController
                         "total" => $db["total"],
                         "rows" => $db["data"]
                     ]);
-                }else  if(Request::param("act") == "xg"){
+                } else  if (Request::param("act") == "xg") {
                     $db = Db::table("ticket_from")->where("id", Request::param("id"))->update(["is_lock" => Request::param("is_lock")]);
                     if ($db) {
                         return json([
@@ -685,6 +729,13 @@ class Admin extends BaseController
         return true;
     }
 
+    private function ReplyEmail($user,$msg,$from){
+        $body = "<div><h4>尊敬的".$user["usernick"]." :</h4>";
+        $body = $body . "<p> 管理员 回复 ".$from["title"].":</p>";
+        $body = $body . "<p>".$msg."</p></div>";
+        return $body;
+    }
+
     private function MailBody($usernick, $type, $domain, $DnsType, $value, $msg)
     {
         $body = "<div><h4>尊敬的用户 " . $usernick . " :</h4><p>";
@@ -704,7 +755,7 @@ class Admin extends BaseController
         return $body;
     }
 
-    private function SendEmail($target, $body)
+    private function SendEmail($target, $body ,$title)
     {
         $mail = new PHPMailer(true);                              // Passing `true` enables exceptions
         try {
@@ -725,7 +776,7 @@ class Admin extends BaseController
 
             //Content
             $mail->isHTML(true);                                  // 是否以HTML文档格式发送  发送后客户端可直接显示对应HTML内容
-            $mail->Subject = '你的dns解析改变,请查收';
+            $mail->Subject = $title;
             $mail->Body    = $body;
 
             $mail->send();

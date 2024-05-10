@@ -9,11 +9,6 @@ class Index extends BaseController
 {
     public function index()
     {
-        return View::fetch();
-    }
-
-    public function lyear_main()
-    {
-        return View::fetch();
+        return redirect("/user/index");
     }
 }
