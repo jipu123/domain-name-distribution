@@ -25,7 +25,7 @@ use AlibabaCloud\SDK\Alidns\V20150109\Models\DeleteDomainRecordRequest;
 use AlibabaCloud\SDK\Alidns\V20150109\Models\AddDomainRecordRequest;
 use AlibabaCloud\Tea\Utils\Utils\RuntimeOptions;
 
-class user extends BaseController
+class User extends BaseController
 {
     public function index()
     {
